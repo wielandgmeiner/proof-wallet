@@ -585,23 +585,19 @@ def chunk_string(string, length):
     return (string[0+i:length+i] for i in range(0, len(string), length))
 
 
-def entropy(n, length):
+def entropy(length):
     """
-    Generate n random strings for the user from /dev/random
+    Generate 1 random string for the user from /dev/random
     """
     safety_checklist()
 
     print("\n\n")
-    print("Making {} random data strings....".format(n))
+    print("Making 1 random data strings....")
     print("If strings don't appear right away, please continually move your mouse cursor. These movements generate entropy which is used to create random data.\n")
 
-    idx = 0
-    while idx < n:
-        seed = subprocess.check_output(
-            "xxd -l {} -p /dev/random".format(length), shell=True)
-        idx += 1
-        seed = seed.decode('ascii').replace('\n', '')
-        print("Computer entropy #{0}: {1}".format(idx, " ".join(chunk_string(seed, 4))))
+    seed = subprocess.check_output("xxd -l {} -p /dev/random".format(length), shell=True)
+    seed = seed.decode('ascii').replace('\n', '')
+    print("Computer entropy: {}".format(" ".join(chunk_string(seed, 4))))
 
 
 ################################################################################################
@@ -829,30 +825,28 @@ def withdraw_interactive():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('program', choices=[
-                        'entropy', 'create-deposit-data', 'create-withdrawal-data'])
-
-    parser.add_argument("--num-keys", type=int,
-                        help="The number of keys to create random entropy for", default=1)
+                        'entropy', 'create-wallet', 'view-addresses', 'sign-psbt'])
+    parser.add_argument('--network', choices=['mainnet', 'testnet', 'regtest'],
+                        help="Bitcoin network to use")
     parser.add_argument("-d", "--dice", type=int,
-                        help="The minimum number of dice rolls to use for entropy when generating private keys (default: 62)", default=62)
+                        help="Minimum number of dice rolls to use for entropy when generating private keys (default: 100)", default=100)
     parser.add_argument("-r", "--rng", type=int,
-                        help="Minimum number of 8-bit bytes to use for computer entropy when generating private keys (default: 20)", default=20)
+                        help="Minimum number of 8-bit bytes to use for computer entropy when generating private keys (default: 32)", default=32)
     parser.add_argument(
-        "-m", type=int, help="Number of signing keys required in an m-of-n multisig address creation (default m-of-n = 1-of-2)", default=1)
+        "-m", type=int, help="Number of signing keys required in an m-of-n multisig wallet (default m-of-n = 1-of-2)", default=1)
     parser.add_argument(
-        "-n", type=int, help="Number of total keys required in an m-of-n multisig address creation (default m-of-n = 1-of-2)", default=2)
-    parser.add_argument('--testnet', type=int, help=argparse.SUPPRESS)
+        "-n", type=int, help="Number of total keys required in an m-of-n multisig wallet (default m-of-n = 1-of-2)", default=2)
     parser.add_argument('-v', '--verbose', action='store_true', help='increase output verbosity')
     args = parser.parse_args()
 
     verbose_mode = args.verbose
 
-    global cli_args, wif_prefix
-    cli_args = ["-testnet", "-rpcport={}".format(args.testnet), "-datadir=bitcoin-test-data"] if args.testnet else []
-    wif_prefix = "EF" if args.testnet else "80"
+    global network, cli_args
+    network = args.network
+    cli_args = [f"-{network}", "-datadir=bitcoin-data"]
 
     if args.program == "entropy":
-        entropy(args.num_keys, args.rng)
+        entropy(args.rng)
 
     if args.program == "create-deposit-data":
         deposit_interactive(args.m, args.n, args.dice, args.rng)
