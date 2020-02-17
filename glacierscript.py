@@ -27,8 +27,8 @@
 import argparse
 from collections import OrderedDict
 from decimal import Decimal
-from hashlib import sha256, md5
-from binascii import unhexlify
+from hashlib import sha256, md5, new as hashlib_new
+from binascii import unhexlify, hexlify
 from mnemonic import Mnemonic
 import json
 import os
@@ -38,7 +38,7 @@ import sys
 import time
 
 # Taken from https://github.com/keis/base58
-from base58 import b58encode_check
+from base58 import b58encode_check, b58decode
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
@@ -63,6 +63,10 @@ def hash_md5(s):
     m.update(s.encode('ascii'))
     return m.hexdigest()
 
+def hash160(string):
+    """A thin wrapper around hashlib to compute the hash160 (SHA256 followed by RIPEMD160)"""
+    intermed = sha256(string).digest()
+    return hashlib_new('ripemd160', intermed).digest()
 
 def satoshi_to_btc(satoshi):
     """
@@ -499,16 +503,147 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
 
     return fee
 
-def get_xpub_from_xprv(xprv):
+def get_xpub_from_xkey(xkey):
     """
-    Returns the xpub for a given xprv
+    Returns the xpub for a given xkey
 
-    xprv: <string> base58 encoded xprv
+    xkey: <string> base58 encoded extended key
     """
-    descriptor = "pk({})".format(xprv)
+    descriptor = "pk({})".format(xkey)
     out = bitcoin_cli_json("getdescriptorinfo", descriptor)
     public_descriptor = out['descriptor'] # example: 'pk(XPUB)#checksum'
     return public_descriptor[3:-10] # slice off 'pk(' prefix and ')#checksum' suffix
+
+def bip32_deserialize(data):
+    """
+    Deserialize a string into a BIP32 extended key (assumes string is valid)
+
+    See the bip32 implementation to validate correctness:
+        https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#Serialization_format
+
+    Parameters:
+        data (str): a serialized bip32 exteneded key
+    """
+    PRIVATE = [b'\x04\x88\xAD\xE4', b'\x04\x35\x83\x94'] # mainnet and testnet private version bits
+    dbin = b58decode(data)
+    vbytes = dbin[0:4]
+    depth = dbin[4]
+    fingerprint = dbin[5:9]
+    i = dbin[9:13]
+    chaincode = dbin[13:45]
+    key = dbin[46:78] + b'\x01' if vbytes in PRIVATE else dbin[45:78]
+    return (vbytes, depth, fingerprint, i, chaincode, key)
+
+def get_fingerprint_from_xkey(xkey):
+    """
+    Returns the BIP32 fingerprint for the given extended key
+
+    xkey: <string> valid bip32 extended key
+    """
+    xpub = get_xpub_from_xkey(xkey)
+    vbytes, depth, fingerprint, i, chaincode, key = bip32_deserialize(xpub)
+    fp_bytes = hash160(key)[:4]
+    return hexlify(fp_bytes).decode('ascii')
+
+def is_valid_xpub(xpub):
+    """
+    Returns whether the string is a valid xpub
+
+    xpub    (str): potential xpub
+    """
+    try:
+        descriptor = "pk({})".format(xpub)
+        # validate that the input string is an xpub
+        bitcoin_cli_checkoutput("getdescriptorinfo", descriptor)
+        # validate the version bits for the global network
+        if network == "mainnet" and xpub[:4] != "xpub" or xpub[:4] != "tpub":
+            print("The provided xpub is not valid for {}. Exiting.".format(network))
+            sys.exit()
+        return True
+    except subprocess.CalledProcessError:
+        print("The provided xpub is invalid. Exiting.")
+        sys.exit()
+
+def get_mnemonic_interactive():
+    """
+    Prompts the user for a valid 24 word BIP39 mnemonic phrase
+    return => <string> xprv derived from the mnemonic (and empty passphrase)
+    """
+    M = Mnemonic()
+    raw_mnemonic = input("Enter the 24 word mnemonic phrase (separate the words with whitespace): ")
+    words = raw_mnemonic.split()
+    mnemonic = " ".join(words)
+    if len(words) != 24:
+        print("Mnemonic phrase must be exactly 24 words long. Exiting.")
+        sys.exit()
+    if M.check(mnemonic) != True:
+        print("The inputted mnemonic phrase is invalid. Exiting.")
+        sys.exit()
+    seed = M.to_seed(mnemonic)
+    return M.to_hd_master_key(seed, network)
+
+def get_xpubs_interactive(n):
+    """
+    Prompts the user for n unique and valid xpubs
+
+    n: <int> the number of xpubs to import
+
+    returns: List<string> the list of validated xpubs
+    """
+    xpubs = []
+    print("Input {} valid xpubs".format(n))
+    for idx in range(n):
+        xpub = input("Enter xpub #{}: ".format(idx+1))
+        is_valid_xpub(xpub)
+        xpubs.append(xpub)
+
+    unique_xpubs = set(xpubs)
+    if len(unique_xpubs) != n:
+        print("Expected {} unique xpubs, but found {}. Exiting".format(n, len(unique_xpubs)))
+        sys.exit()
+
+    return xpubs
+
+def wsh_descriptor(xprv, xpubs, m, change = 0, private=False):
+    """
+    Creates the desired Bitcoin Core sortedmulti wsh descriptor for
+    the provided extended keys
+
+    xprv: <string> BIP32 xprv
+    xpubs: List<string> BIP32 xpubs
+    m: <int> number of multisig keys required for withdrawal
+    change: <int> internal or external descriptor
+    """
+    xpub_for_xprv = get_xpub_from_xkey(xprv)
+    # create descriptor without checksum
+    descriptor = "wsh(sortedmulti({},".format(str(m))
+    for xpub in xpubs:
+        if xpub != xpub_for_xprv:
+            descriptor += "[{}]{}/{}/*,".format(
+                get_fingerprint_from_xkey(xpub),
+                xpub,
+                str(change)
+            )
+    descriptor += "[{}]{}/{}/*))".format(
+        get_fingerprint_from_xkey(xpub_for_xprv),
+        xprv if private == True else xpub_for_xprv,
+        str(change)
+    )
+    # getdescriptorinfo and append checksum
+    output = bitcoin_cli_json("getdescriptorinfo", descriptor)
+    return descriptor + "#" + output["checksum"]
+
+def deriveaddresses(xprv, xpubs, m, start, end, change=0):
+    """
+    Derives wallet addresses based on the requested parameters
+
+    xprv: <string> BIP32 xprv
+    xpubs: List<string> BIP32 xpubs
+    m: <int> number of multisig keys required for withdrawal
+    change: <int> internal or external address
+    """
+    desc = wsh_descriptor(xprv, xpubs, m, change, False)
+    return bitcoin_cli_json("deriveaddresses", desc, json.dumps([start, end]))
 
 ################################################################################################
 #
@@ -651,7 +786,7 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
     for i, word in enumerate(words):
         print("{}. {}".format(i + 1, word))
 
-    xpub = get_xpub_from_xprv(xprv)
+    xpub = get_xpub_from_xkey(xprv)
     print("xpub:\n{}\n".format(xpub))
 
     write_and_verify_qr_code("xpub", "xpub.png", xpub)
@@ -662,60 +797,66 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
 #
 ################################################################################################
 
-def deposit_interactive(m, n, dice_seed_length=62, rng_seed_length=20):
+def view_addresses_interactive(m, n):
     """
-    Generate data for a new cold storage address (private keys, address, redemption script)
+    Show the addresses for a multisignature wallet with the user-provided policy
     m: <int> number of multisig keys required for withdrawal
     n: <int> total number of multisig keys
-    dice_seed_length: <int> minimum number of dice rolls required
-    rng_seed_length: <int> minimum length of random seed required
     """
 
     safety_checklist()
     ensure_bitcoind_running()
     require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
 
-    print("\n")
-    print("Creating {0}-of-{1} cold storage address.\n".format(m, n))
+    # prompt user for mnemonic and all xpubs in the multisignature quorum
+    my_xprv = get_mnemonic_interactive()
+    my_xpub = get_xpub_from_xkey(my_xprv)
+    xpubs = get_xpubs_interactive(n)
 
-    keys = []
+    if my_xpub not in xpubs:
+        print("None of the provided xpubs match the provided mnemonic phrase. Exiting.")
+        sys.exit()
 
-    while len(keys) < n:
-        index = len(keys) + 1
-        print("\nCreating private key #{}".format(index))
+    start = 0
+    N = 10 # number of addresses to display at one time
+    change = 0
+    LINE_BREAKS = ("=" * 80 + "\n") * 3
+    while True:
+        addresses = deriveaddresses(my_xprv, xpubs, m, start, start + N - 1, change=0)
+        print("Derivation Path, Address")
+        for i, addr in enumerate(addresses):
+            idx = start + i
+            print("[{}] m/{}/{}: {}".format(str(i), str(change), idx, addr))
+        print("\nControls:")
+        print("\t'NEXT' -- view next {} addresses".format(N))
+        print("\t'PREV' -- view previous {} addresses".format(N))
+        print("\t'CHANGE' -- toggle to/from change addresses")
+        print("\t'0' -- save the address at index 0 as a QR code in address.png")
+        print("\t'1' -- save the address at index 1 as a QR code in address.png")
+        print("\t'2' -- save the address at index 2 as a QR code in address.png")
+        print("\t'3' -- save the address at index 3 as a QR code in address.png")
+        print("\t'4' -- save the address at index 4 as a QR code in address.png")
+        print("\t'5' -- save the address at index 5 as a QR code in address.png")
+        print("\t'6' -- save the address at index 6 as a QR code in address.png")
+        print("\t'7' -- save the address at index 7 as a QR code in address.png")
+        print("\t'8' -- save the address at index 8 as a QR code in address.png")
+        print("\t'9' -- save the address at index 9 as a QR code in address.png")
+        print("\t'EXIT' -- exit")
+        cmd = input("Enter your desired command: ")
+        print(LINE_BREAKS)
 
-        dice_seed_string = read_dice_seed_interactive(dice_seed_length)
-        dice_seed_hash = hash_sha256(dice_seed_string)
-
-        rng_seed_string = read_rng_seed_interactive(rng_seed_length)
-        rng_seed_hash = hash_sha256(rng_seed_string)
-
-        # back to hex string
-        hex_private_key = xor_hex_strings(dice_seed_hash, rng_seed_hash)
-        WIF_private_key = hex_private_key_to_WIF_private_key(hex_private_key)
-        keys.append(WIF_private_key)
-
-    print("Private keys created.")
-    print("Generating {0}-of-{1} cold storage address...\n".format(m, n))
-
-    addresses = [get_address_for_wif_privkey(key) for key in keys]
-    results = addmultisigaddress(m, addresses)
-
-    print("Private keys:")
-    for idx, key in enumerate(keys):
-        print("Key #{0}: {1}".format(idx + 1, key))
-
-    print("\nCold storage address:")
-    print("{}".format(results["address"]))
-
-    print("\nRedemption script:")
-    print("{}".format(results["redeemScript"]))
-    print("")
-
-    write_and_verify_qr_code("cold storage address", "address.png", results["address"])
-    write_and_verify_qr_code("redemption script", "redemption.png",
-                       results["redeemScript"])
-
+        if cmd == "NEXT":
+            start += N
+        elif cmd == "PREV" and start > 0:
+            start -= N
+        elif cmd == "CHANGE":
+            change = 1 if change == 0 else 0
+        elif cmd == "EXIT":
+            sys.exit()
+        elif cmd in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+            write_and_verify_qr_code("address", "address.png", addresses[int(cmd)])
+        else:
+            print("Unsupported option.")
 
 ################################################################################################
 #
@@ -907,8 +1048,8 @@ if __name__ == "__main__":
     if args.program == "create-wallet":
         create_wallet_interactive(args.dice, args.rng)
 
-    if args.program == "create-deposit-data":
-        deposit_interactive(args.m, args.n, args.dice, args.rng)
+    if args.program == "view-addresses":
+        view_addresses_interactive(args.m, args.n)
 
     if args.program == "create-withdrawal-data":
-        withdraw_interactive()
+        sign_psbt_interactive()

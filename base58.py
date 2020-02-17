@@ -30,6 +30,7 @@ with the bitcoin network.
 # This module adds shiny packaging and support for python3.
 
 from hashlib import sha256
+from binascii import unhexlify
 
 __version__ = '1.0.3'
 
@@ -66,3 +67,40 @@ def b58encode_check(v):
 
     digest = sha256(sha256(v).digest()).digest()
     return b58encode(v + digest[:4])
+
+class Base58Error(Exception):
+    pass
+
+class InvalidBase58Error(Base58Error):
+    """Raised on generic invalid base58 data, such as bad characters.
+
+    Checksum failures raise Base58ChecksumError specifically.
+    """
+    pass
+
+def b58decode(s):
+    """Decode a base58-encoding string, returning bytes"""
+    if not s:
+        return b''
+
+    # Convert the string to an integer
+    n = 0
+    for c in s:
+        n *= 58
+        if ord(c) not in alphabet:
+            raise InvalidBase58Error('Character %r is not a valid base58 character' % c)
+        digit = alphabet.index(ord(c))
+        n += digit
+
+    # Convert the integer to bytes
+    h = '%x' % n
+    if len(h) % 2:
+        h = '0' + h
+    res = unhexlify(h.encode('utf8'))
+
+    # Add padding back.
+    pad = 0
+    for c in s[:-1]:
+        if ord(c) == alphabet[0]: pad += 1
+        else: break
+    return b'\x00' * pad + res
