@@ -28,6 +28,8 @@ import argparse
 from collections import OrderedDict
 from decimal import Decimal
 from hashlib import sha256, md5
+from binascii import unhexlify
+from mnemonic import Mnemonic
 import json
 import os
 import shlex
@@ -497,6 +499,16 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
 
     return fee
 
+def get_xpub_from_xprv(xprv):
+    """
+    Returns the xpub for a given xprv
+
+    xprv: <string> base58 encoded xprv
+    """
+    descriptor = "pk({})".format(xprv)
+    out = bitcoin_cli_json("getdescriptorinfo", descriptor)
+    public_descriptor = out['descriptor'] # example: 'pk(XPUB)#checksum'
+    return public_descriptor[3:-10] # slice off 'pk(' prefix and ')#checksum' suffix
 
 ################################################################################################
 #
@@ -602,7 +614,51 @@ def entropy(length):
 
 ################################################################################################
 #
-# Main "deposit" function
+# main "create wallet" function
+#
+################################################################################################
+def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
+    """
+    Generate data for a new cold storage multisignature signatory (mnemonic phrase, xpub)
+    dice_seed_length: <int> minimum number of dice rolls required
+    rng_seed_length: <int> minimum length of random seed required
+    """
+    safety_checklist()
+    ensure_bitcoind_running()
+    require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
+
+    print("\n")
+    print("Creating cold storage private key\n")
+
+    dice_seed_string = read_dice_seed_interactive(dice_seed_length)
+    dice_seed_hash = hash_sha256(dice_seed_string)
+
+    rng_seed_string = read_rng_seed_interactive(rng_seed_length)
+    rng_seed_hash = hash_sha256(rng_seed_string)
+
+    # back to hex string
+    hex_private_key = xor_hex_strings(dice_seed_hash, rng_seed_hash)
+    bin_private_key = unhexlify(hex_private_key)
+
+   # convert private key to BIP39 mnemonic phrase
+    M = Mnemonic()
+    mnemonic = M.to_mnemonic(bin_private_key)
+    seed = M.to_seed(mnemonic)
+    xprv = M.to_hd_master_key(seed, network)
+
+    print("\nBIP39 Mnemonic Phrase: ")
+    words = mnemonic.split(" ")
+    for i, word in enumerate(words):
+        print("{}. {}".format(i + 1, word))
+
+    xpub = get_xpub_from_xprv(xprv)
+    print("xpub:\n{}\n".format(xpub))
+
+    write_and_verify_qr_code("xpub", "xpub.png", xpub)
+
+################################################################################################
+#
+# main "deposit" function
 #
 ################################################################################################
 
@@ -617,7 +673,7 @@ def deposit_interactive(m, n, dice_seed_length=62, rng_seed_length=20):
 
     safety_checklist()
     ensure_bitcoind_running()
-    require_minimum_bitcoind_version(170000) # getaddressesbylabel API new in v0.17.0
+    require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
 
     print("\n")
     print("Creating {0}-of-{1} cold storage address.\n".format(m, n))
@@ -675,7 +731,7 @@ def withdraw_interactive():
 
     safety_checklist()
     ensure_bitcoind_running()
-    require_minimum_bitcoind_version(170000) # signrawtransaction API changed in v0.17.0
+    require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
 
     approve = False
 
@@ -827,7 +883,7 @@ if __name__ == "__main__":
     parser.add_argument('program', choices=[
                         'entropy', 'create-wallet', 'view-addresses', 'sign-psbt'])
     parser.add_argument('--network', choices=['mainnet', 'testnet', 'regtest'],
-                        help="Bitcoin network to use")
+                        help="Bitcoin network to use", default='testnet')
     parser.add_argument("-d", "--dice", type=int,
                         help="Minimum number of dice rolls to use for entropy when generating private keys (default: 100)", default=100)
     parser.add_argument("-r", "--rng", type=int,
@@ -847,6 +903,9 @@ if __name__ == "__main__":
 
     if args.program == "entropy":
         entropy(args.rng)
+
+    if args.program == "create-wallet":
+        create_wallet_interactive(args.dice, args.rng)
 
     if args.program == "create-deposit-data":
         deposit_interactive(args.m, args.n, args.dice, args.rng)
