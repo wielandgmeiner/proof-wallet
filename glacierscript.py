@@ -36,9 +36,10 @@ import shlex
 import subprocess
 import sys
 import time
-
+import re
 # Taken from https://github.com/keis/base58
 from base58 import b58encode_check, b58decode
+from constants import *
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
@@ -633,6 +634,49 @@ def wsh_descriptor(xprv, xpubs, m, change = 0, private=False):
     output = bitcoin_cli_json("getdescriptorinfo", descriptor)
     return descriptor + "#" + output["checksum"]
 
+def createwallet(name):
+    """
+    Creates wallet in Bitcoin Core idempotently
+
+    name: <string> wallet name (e.g. 'wallet-a83d4c1f')
+    """
+    # list wallets (return if already loaded)
+    wallets = bitcoin_cli_json("listwallets")
+    if name in wallets:
+        return
+    try:
+        # try loading the wallet if it already exists
+        return bitcoin_cli_json("loadwallet",  name)
+    except subprocess.CalledProcessError:
+        # create wallet with private keys disabled
+        return bitcoin_cli_checkoutput("createwallet", name, "false")
+
+def importmulti(idxs, xprv, xpubs, m):
+    """
+    Imports private key data for (external and internal) addresses at the given 
+    indices into Bitcoin Core
+
+    idxs: Set<int> address indices to perform the import
+    xprv: <string> BIP32 xprv
+    xpubs: List<string> BIP32 xpubs
+    m: <int> number of multisig keys required for withdrawal
+    """
+    fp = get_fingerprint_from_xkey(xpub_for_xprv)
+    name = "wallet-{}".format(fp)
+    for change in {0, 1}:
+        desc = wsh_descriptor(xprv, xpubs, m, change, True)
+        args = []
+        for i in idxs:
+            args.append({
+                "desc": desc,
+                "internal": True if change == 1 else False,
+                "range": [i, i],
+                "timestamp": "now",
+                "keypool": False,
+                "watchonly": False
+            })
+        bitcoin_cli_json("-rpcwallet={}".format(name), "importmulti", json.dumps(arg))
+
 def deriveaddresses(xprv, xpubs, m, start, end, change=0):
     """
     Derives wallet addresses based on the requested parameters
@@ -644,6 +688,191 @@ def deriveaddresses(xprv, xpubs, m, start, end, change=0):
     """
     desc = wsh_descriptor(xprv, xpubs, m, change, False)
     return bitcoin_cli_json("deriveaddresses", desc, json.dumps([start, end]))
+
+def validate_psbt(psbt_raw, xprv, xpubs, m):
+    """
+    ******************************************************************
+    ********************  SECURITY CRITICAL  *************************
+    ******************************************************************
+    Validate whether the psbt is safe to sign based on exhaustive checks
+
+
+    psbt_raw: <string>  base64 encoded psbt
+    xprv: <string> BIP32 xprv
+    xpubs: List<string> BIP32 xpubs
+    m: <int> number of multisig keys required for withdrawal
+
+    returns: dict
+        success:          List<str> successful validations performed on psbt
+        warning:          List<str> warnings about psbt
+        psbt:             <dict> python dict loaded from decodepsbt RPC call
+        importmulti_idxs: Set<int> set of indices to pass to the importmulti RPC call
+        analysis:         <dict> python dict loaded from analyzepsbt RPC call
+    """
+    response = {
+        "success": [],
+        "warning": [],
+        "psbt": None,
+        "importmulti_idxs": set(),
+        "analysis": None
+    }
+    try:
+        # attempt to decode psbt
+        psbt = bitcoin_cli_json("decodepsbt", psbt_raw)
+        # attempt to analyze psbt (should always succeed if decode succeeds)
+        response["analysis"] = bitcoin_cli_json("analyzepsbt", psbt_raw)
+
+        pattern = "^m/([01])/(0|[1-9][0-9]*)$" # match m/{change}/{idx} and prevent leading zeros
+        response["success"].append("The provided base64 encoded input is a valid PSBT.")
+
+        fps = set(map(lambda xpub: get_fingerprint_from_xkey(xpub), xpubs))
+
+        # GENERAL VALIDATIONS
+        if len(psbt[PSBT_INPUTS]) < 1:
+            print("PSBT 'inputs' array is empty")
+            sys.exit()
+        if len(psbt[PSBT_OUTPUTS]) < 1:
+            print("PSBT 'outputs' array is empty")
+            sys.exit()
+
+        # INPUTS VALIDATIONS
+        for i, _input in enumerate(psbt[PSBT_INPUTS]):
+            # Ensure input spends a witness UTXO
+            if PSBT_NON_WITNESS_UTXO in _input or PSBT_WITNESS_UTXO not in _input:
+                sys.exit("Tx input {} doesn't spend the expected segwit utxo.".format(i))
+
+
+            # Ensure input contains BIP32 derivations
+            if PSBT_BIP32_DERIVS not in _input:
+                sys.exit("Tx input {} does not contain bip32 derivation metadata.".format(i))
+
+            # Get the set of master fingerprints in the input's BIP32 derivations; ensure
+            # they are consistent with the wallet's fingerprints
+            input_fps = set(map(lambda deriv: deriv[PSBT_BIP32_MASTER_FP], _input[PSBT_BIP32_DERIVS]))
+            if fps != input_fps:
+                sys.exit("Tx input {} does not have the correct set of fingerprints.".format(i))
+
+            # Ensure the witness utxo is the expected type: witness_v0_scripthash
+            scriptpubkey_type = _input[PSBT_WITNESS_UTXO][PSBT_SCRIPTPUBKEY][PSBT_TYPE]
+            if scriptpubkey_type != PSBT_WSH_TYPE:
+                sys.exit("Tx input {} contains an incorrect scriptPubKey type: {}.".format(i, scriptpubkey_type))
+
+            # Ensure input contains a witness script
+            if PSBT_WITNESS_SCRIPT not in _input:
+                sys.exit("Tx input {} doesn't contain a witness script".format(i))
+
+            # Ensure that the witness script hash equals the scriptPubKey
+            witness_script = _input[PSBT_WITNESS_SCRIPT][PSBT_HEX]
+            witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
+            scriptPubKeyParts = _input[PSBT_WITNESS_UTXO][PSBT_SCRIPTPUBKEY][PSBT_ASM].split(" ")
+
+            # Ensure the scriptPubKey is the expected format: "0 WITNESS_SCRIPT_HASH"
+            # Probably already validated in Bitcoin Core given the type but be extra cautious
+            if len(scriptPubKeyParts) != 2:
+                sys.exit("Tx input {} has an unexpected scriptPubKey".format(i))
+            if scriptPubKeyParts[0] != "0":
+                sys.exit("Tx input {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0]))
+            if witness_script_hash != scriptPubKeyParts[1]:
+                sys.exit("The hash of the witness script for Tx input {} does not match the provided witness UTXO scriptPubKey".format(i))
+
+            # Ensure that the actual address contained in the witness_utxo matches our
+            # expectations given the BIP32 derivations provided
+            actual_address = _input[PSBT_WITNESS_UTXO][PSBT_SCRIPTPUBKEY][PSBT_ADDRESS]
+
+            # Ensure each public key comes from the same derivation path and this derivation path
+            # abides by the proper format (enforced by regex)
+            input_paths = set(map(lambda deriv: deriv[PSBT_BIP32_PATH], _input[PSBT_BIP32_DERIVS]))
+            if len(input_paths) != 1:
+                sys.exit("Tx input {} contains different bip32 derivation paths for multiple xpubs".format(i))
+            input_path = input_paths.pop()
+            match_object = re.match(pattern, input_path)
+            if match_object is None:
+                sys.exit("Tx input {} contains an unsupported bip32 derivation path: {}".format(i, input_path))
+            change, idx = map(int, match_object.groups())
+
+            # Ensure expected address implied by metadata matches actual address supplied
+            [expected_address] = deriveaddresses(xprv, xpubs, m, idx, idx, change)
+            if expected_address != actual_address:
+                sys.exit("Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(idx))
+
+            # Ensure sighash is not set at all or set correctly
+            if PSBT_SIGHASH in _input and _input[PSBT_SIGHASH] != SIGHASH_ALL:
+                sys.exit("Tx input {} specifies an unsupported sighash, '{}'. The only supported sighash is {}".format(i, _input[PSBT_SIGHASH], SIGHASH_ALL))
+                return response
+
+            # Update impormulti_idxs
+            response["importmulti_idxs"].add(idx)
+
+        response["success"].append("All input validations succeeded.")
+
+        # OUTPUTS VALIDATIONS
+        tx = psbt[PSBT_TX]
+        change_idxs = []
+        for i, output in enumerate(psbt[PSBT_OUTPUTS]):
+            # Get the corresponding Tx ouput
+            tx_out = tx[PSBT_TX_VOUT][i]
+            if PSBT_BIP32_DERIVS not in output:
+                # consider this output as not part of this wallet not an error or
+                # warning as this could be a valid output spend
+                continue
+
+            # Get the set of fingerprints in the output's BIP32 derivations; the output cannot
+            # be change if ITS fingerprints are not consistent with OUR fingerprints
+            output_fps = set(map(lambda deriv: deriv[PSBT_BIP32_MASTER_FP], output[PSBT_BIP32_DERIVS]))
+            if fps != output_fps:
+                continue
+
+            # The output cannot be change if it doesn't spend  back to the proper
+            # output type: witness_v0_scripthash
+            scriptpubkey_type = tx_out[PSBT_SCRIPTPUBKEY][PSBT_TYPE]
+            if scriptpubkey_type != PSBT_WSH_TYPE:
+                continue
+
+            # Ensure the scriptpubkey only contains 1 address (is this necessary?)
+            if len(tx_out[PSBT_SCRIPTPUBKEY][PSBT_TX_ADDRESSES]) != 1:
+                sys.exit("Tx output {} contains multiple addresses".format(i))
+            [actual_address] = tx_out[PSBT_SCRIPTPUBKEY][PSBT_TX_ADDRESSES]
+
+            # Ensure each public key comes from the same derivation path and this derivation path
+            # abides by the proper format (enforced by regex)
+            output_paths = set(map(lambda deriv: deriv[PSBT_BIP32_PATH], output[PSBT_BIP32_DERIVS]))
+            if len(output_paths) != 1:
+                sys.exit("Tx output {} contains different bip32 derivation paths for multiple xpubs".format(i))
+            output_path = output_paths.pop()
+            match_object = re.match(pattern, output_path)
+            if match_object is None:
+                sys.exit("Tx output {} contains an unsupported bip32 derivation path: {}".format(i, output_path))
+            change, idx = map(int, match_object.groups())
+
+            # Allow a user to spend change to an external address, but display a warning
+            if change == 0:
+                response["warning"].append("Tx output {} spends change to an external receive address".format(i))
+
+            # Ensure the actual address in the Tx output matches the expected address given
+            # the BIP32 derivation paths
+            [expected_address] = deriveaddresses(xprv, xpubs, m, idx, idx, change)
+            if expected_address != actual_address:
+                sys.exit("Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i))
+            change_idxs.append(i) # change validations pass
+
+        # Display a warning to the user if we can't recognize any change (suspicious)
+        if len(change_idxs) == 0:
+            no_change_warning = "No change outputs were identified in this transaction. "
+            no_change_warning += "If you intended to send bitcoin back to your wallet as change, "
+            no_change_warning += "abort this signing process. If not, you can safely ignore this warning."
+            response["warning"].append(no_change_warning)
+
+        # Validations succeded!
+        response["success"].append("All output validations succeeded.")
+        response["psbt"] = psbt
+
+    # Catches exceptions in decoding or analyzing PSBT
+    except subprocess.CalledProcessError:
+        sys.exit("The provided base64 encoded input is NOT a valid PSBT")
+    # Catch any other unexpected exception that may occur
+    except:
+        sys.exit("An unexpected error occurred during the PSBT validation process")
+    return response
 
 ################################################################################################
 #
@@ -863,6 +1092,43 @@ def view_addresses_interactive(m, n):
 # Main "withdraw" function
 #
 ################################################################################################
+def sign_psbt_interactive(m, n):
+    """
+    Import, validate and sign a psbt to withdraw funds from cold storage.
+    All data required for this operation is input at the terminal
+
+    m: <int> number of multisig keys required for withdrawal
+    n: <int> total number of multisig keys
+    """
+
+    safety_checklist()
+    ensure_bitcoind_running()
+    require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
+
+    # prompt user for mnemonic and all xpubs in the multisignature quorum
+    my_xprv = get_mnemonic_interactive()
+    my_xpub = get_xpub_from_xkey(my_xprv)
+    xpubs = get_xpubs_interactive(n)
+
+    if my_xpub not in xpubs:
+        print("None of the provided xpubs match the provided mnemonic phrase. Exiting.")
+        sys.exit()
+
+    # prompt user for base64 psbt string
+    psbt_raw = input("Enter the psbt for the transaction you wish to sign: ")
+
+    print("\nValidating the PSBT...")
+    psbt_validation = validate_psbt(psbt_raw, my_xprv, xpubs, m)
+
+    print("PSBT validation was successful.")
+    if len(psbt_validation["warning"]) > 0:
+        print("\nWARNINGS:")
+        for warning in psbt_validation["warning"]:
+            print("* {}".format(warning))
+    else:
+        print("\nWARNINGS: There were no warnings during the validation process.")
+
+    print(psbt_validation)
 
 def withdraw_interactive():
     """
@@ -1051,5 +1317,5 @@ if __name__ == "__main__":
     if args.program == "view-addresses":
         view_addresses_interactive(args.m, args.n)
 
-    if args.program == "create-withdrawal-data":
-        sign_psbt_interactive()
+    if args.program == "sign-psbt":
+        sign_psbt_interactive(args.m, args.n)
