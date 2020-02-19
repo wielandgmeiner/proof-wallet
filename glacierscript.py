@@ -706,6 +706,7 @@ def validate_psbt(psbt_raw, xprv, xpubs, m):
         success:          List<str> successful validations performed on psbt
         warning:          List<str> warnings about psbt
         psbt:             <dict> python dict loaded from decodepsbt RPC call
+        change_idxs:      List<int> list of change indices
         importmulti_idxs: Set<int> set of indices to pass to the importmulti RPC call
         analysis:         <dict> python dict loaded from analyzepsbt RPC call
     """
@@ -713,6 +714,7 @@ def validate_psbt(psbt_raw, xprv, xpubs, m):
         "success": [],
         "warning": [],
         "psbt": None,
+        "change_idxs": [],
         "importmulti_idxs": set(),
         "analysis": None
     }
@@ -807,7 +809,6 @@ def validate_psbt(psbt_raw, xprv, xpubs, m):
 
         # OUTPUTS VALIDATIONS
         tx = psbt[PSBT_TX]
-        change_idxs = []
         for i, output in enumerate(psbt[PSBT_OUTPUTS]):
             # Get the corresponding Tx ouput
             tx_out = tx[PSBT_TX_VOUT][i]
@@ -853,10 +854,10 @@ def validate_psbt(psbt_raw, xprv, xpubs, m):
             [expected_address] = deriveaddresses(xprv, xpubs, m, idx, idx, change)
             if expected_address != actual_address:
                 sys.exit("Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i))
-            change_idxs.append(i) # change validations pass
+            response["change_idxs"].append(i) # change validations pass
 
         # Display a warning to the user if we can't recognize any change (suspicious)
-        if len(change_idxs) == 0:
+        if len(response["change_idxs"]) == 0:
             no_change_warning = "No change outputs were identified in this transaction. "
             no_change_warning += "If you intended to send bitcoin back to your wallet as change, "
             no_change_warning += "abort this signing process. If not, you can safely ignore this warning."
@@ -1120,15 +1121,73 @@ def sign_psbt_interactive(m, n):
     print("\nValidating the PSBT...")
     psbt_validation = validate_psbt(psbt_raw, my_xprv, xpubs, m)
 
-    print("PSBT validation was successful.")
+    print("PSBT validation SUCCESSFUL:")
+    for success in psbt_validation["success"]:
+        print("* {}".format(success))
+
+    WARNINGS_HEADER = "\nPSBT validation WARNINGS:"
     if len(psbt_validation["warning"]) > 0:
-        print("\nWARNINGS:")
+        print(WARNINGS_HEADER)
         for warning in psbt_validation["warning"]:
             print("* {}".format(warning))
     else:
-        print("\nWARNINGS: There were no warnings during the validation process.")
+        print("{} There were no warnings during the validation process.".format(WARNINGS_HEADER))
 
-    print(psbt_validation)
+    psbt = psbt_validation["psbt"]
+    analysis = psbt_validation["analysis"]
+    change_idxs = psbt_validation["change_idxs"]
+
+    # Retrieve fields from decoded PSBT that need to be shown to user
+    tx = psbt[PSBT_TX]
+    txid = tx[PSBT_TX_TXID]
+    num_vin = len(tx[PSBT_TX_VIN])
+    num_vout = len(tx[PSBT_TX_VOUT])
+
+    fee = Decimal(psbt[PSBT_FEE]).quantize(SATOSHI_PLACES)
+    fee_rate_raw = Decimal(analysis[ANALYZE_ESTIMATED_FEERATE]).quantize(SATOSHI_PLACES)
+    fee_rate = round(FEE_RATE_MULTIPLIER * fee_rate_raw, 1) # convert and round BTC/kB to sat/byte
+    vsize = analysis[ANALYZE_ESTIMATED_VSIZE]
+
+    # Render transaction inputs
+    def parse_input(psbt, idx):
+        txid = psbt[PSBT_TX][PSBT_TX_VIN][idx][PSBT_TX_TXID]
+        vout = psbt[PSBT_TX][PSBT_TX_VIN][idx][PSBT_TX_VOUT]
+        addr = psbt[PSBT_INPUTS][idx][PSBT_WITNESS_UTXO][PSBT_SCRIPTPUBKEY][PSBT_ADDRESS]
+        amount = Decimal(psbt[PSBT_INPUTS][idx][PSBT_WITNESS_UTXO][PSBT_AMOUNT]).quantize(SATOSHI_PLACES)
+        return (txid, vout, addr, amount)
+
+    inputs = list(map(lambda i: parse_input(psbt, i), range(num_vin)))
+    inputs_str = "Inputs ({})\n".format(num_vin)
+    for txin, vout, addr, amount in inputs:
+        txid_formatted = txin[:10] + "..." + txin[-10:]
+        inputs_str += "{}:{}\t{}\t{}\n".format(
+            txid_formatted,
+            vout,
+            addr,
+            amount
+        )
+
+    # Render transaction outputs
+    def parse_output(psbt, idx):
+        change = idx in change_idxs
+        [addr] = psbt[PSBT_TX][PSBT_TX_VOUT][idx][PSBT_SCRIPTPUBKEY][PSBT_TX_ADDRESSES]
+        value = Decimal(psbt[PSBT_TX][PSBT_TX_VOUT][idx][PSBT_TX_VALUE]).quantize(SATOSHI_PLACES)
+        return (addr, value, change)
+
+    outputs = list(map(lambda i: parse_output(psbt, i), range(num_vout)))
+    outputs_str = f"Outputs ({num_vout})\n"
+    for addr, value, change in outputs:
+        change_str = "CHANGE" if change else "NOT CHANGE"
+        outputs_str += "[{}] {}\t{}\n".format(change_str, addr, value)
+
+    print("\nSign PSBT")
+    print("Transaction ID: {}".format(txid))
+    print("Virtual size: {} vbyte".format(vsize))
+    print("Fee (total): {}".format(fee))
+    print("Fee (rate): {} sat/byte".format(fee_rate))
+
+    print("\n{}".format(inputs_str))
+    print("{}".format(outputs_str))
 
 def withdraw_interactive():
     """
