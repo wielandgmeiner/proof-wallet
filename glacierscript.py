@@ -27,6 +27,7 @@
 import argparse
 from collections import OrderedDict
 from decimal import Decimal
+import glob
 from hashlib import sha256, md5, new as hashlib_new
 from binascii import unhexlify, hexlify
 from mnemonic import Mnemonic
@@ -661,8 +662,9 @@ def importmulti(idxs, xprv, xpubs, m):
     xpubs: List<string> BIP32 xpubs
     m: <int> number of multisig keys required for withdrawal
     """
-    fp = get_fingerprint_from_xkey(xpub_for_xprv)
+    fp = get_fingerprint_from_xkey(xprv)
     name = "wallet-{}".format(fp)
+    createwallet(name)
     for change in {0, 1}:
         desc = wsh_descriptor(xprv, xpubs, m, change, True)
         args = []
@@ -675,7 +677,7 @@ def importmulti(idxs, xprv, xpubs, m):
                 "keypool": False,
                 "watchonly": False
             })
-        bitcoin_cli_json("-rpcwallet={}".format(name), "importmulti", json.dumps(arg))
+        bitcoin_cli_json("-rpcwallet={}".format(name), "importmulti", json.dumps(args))
 
 def deriveaddresses(xprv, xpubs, m, start, end, change=0):
     """
@@ -688,6 +690,24 @@ def deriveaddresses(xprv, xpubs, m, start, end, change=0):
     """
     desc = wsh_descriptor(xprv, xpubs, m, change, False)
     return bitcoin_cli_json("deriveaddresses", desc, json.dumps([start, end]))
+
+
+def walletprocesspsbt(psbt, idxs, xprv, xpubs, m):
+    """
+    Signs a psbt after importing the necessary key data
+
+    psbt: <str> base64 encoded psbt
+    idxs: Set<int> indices to import into Bitcoin Core to sign the psbt
+    xprv: <string> BIP32 xprv
+    xpubs: List<string> BIP32 xpubs
+    m: <int> number of multisig keys required for withdrawal
+    """
+    fp = get_fingerprint_from_xkey(xprv)
+    name = "wallet-{}".format(fp)
+    createwallet(name)
+    # import the descriptors necessary to process the provided psbt
+    importmulti(idxs, xprv, xpubs, m)
+    return bitcoin_cli_json("-rpcwallet={}".format(name), "walletprocesspsbt".format(name), psbt)
 
 def validate_psbt(psbt_raw, xprv, xpubs, m):
     """
@@ -881,6 +901,29 @@ def validate_psbt(psbt_raw, xprv, xpubs, m):
 #
 ################################################################################################
 
+def decode_one_qr(filename):
+    """
+    Decode a QR code from an image file, and return the decoded string.
+    """
+    zresults = subprocess.run(["zbarimg", "--set", "*.enable=0", "--set", "qr.enable=1",
+                              "--quiet", "--raw", filename], check=True, stdout=subprocess.PIPE)
+    return zresults.stdout.decode('ascii').strip()
+
+
+def decode_qr(filenames):
+    """
+    Decode a (series of) QR codes from a (series of) image file(s), and return the decoded string.
+    """
+    return ''.join(decode_one_qr(f) for f in filenames)
+
+
+def write_qr_code(filename, data):
+    """
+    Write one QR code.
+    """
+    subprocess.run(["qrencode", "-o", filename, data], check=True)
+
+
 def write_and_verify_qr_code(name, filename, data):
     """
     Write a QR code and then read it back to try and detect any tricksy malware tampering with it.
@@ -888,19 +931,49 @@ def write_and_verify_qr_code(name, filename, data):
     name: <string> short description of the data
     filename: <string> filename for storing the QR code
     data: <string> the data to be encoded
+
+    If data fits in a single QR code, we use filename directly. Otherwise
+    we add "-%02d" to each filename; e.g. transaction-01.png transaction-02.png.
+
+    The `qrencode` program can do this directly using "structured symbols" with
+    its -S option, but `zbarimg` doesn't recognize those at all. See:
+    https://github.com/mchehab/zbar/issues/66
+
+    It's also possible that some mobile phone QR scanners won't recognize such
+    codes. So we split it up manually here.
+
+    The theoretical limit of alphanumeric QR codes is 4296 bytes, though
+    somehow qrencode can do up to 4302.
+
     """
+    # Remove any stale files, so we don't confuse user if a previous
+    # withdrawal created 3 files (or 1 file) and this one only has 2
+    base, ext = os.path.splitext(filename)
+    for deleteme in glob.glob("{}*{}".format(base, ext)):
+        os.remove(deleteme)
+    MAX_QR_LEN = 250
+    if len(data) <= MAX_QR_LEN:
+        write_qr_code(filename, data)
+        filenames = [filename]
+    else:
+        idx = 1
+        filenames = []
+        intdata = data
+        while len(intdata) > 0:
+            thisdata = intdata[0:MAX_QR_LEN]
+            intdata = intdata[MAX_QR_LEN:]
+            thisfile = "{}-{:02d}{}".format(base, idx, ext)
+            filenames.append(thisfile)
+            write_qr_code(thisfile, thisdata)
+            idx += 1
 
-    subprocess.call("qrencode -o {0} {1}".format(filename, data), shell=True)
-    check = subprocess.check_output(
-        "zbarimg --set '*.enable=0' --set 'qr.enable=1' --quiet --raw {}".format(filename), shell=True)
-
-    if check.decode('ascii').strip() != data:
+    qrdata = decode_qr(filenames)
+    if qrdata != data:
         print("********************************************************************")
         print("WARNING: {} QR code could not be verified properly. This could be a sign of a security breach.".format(name))
         print("********************************************************************")
 
-    print("QR code for {0} written to {1}".format(name, filename))
-
+    print("QR code for {0} written to {1}".format(name, ','.join(filenames)))
 
 ################################################################################################
 #
@@ -1162,7 +1235,7 @@ def sign_psbt_interactive(m, n):
         return (addr, value, change)
 
     outputs = list(map(lambda i: parse_output(psbt, i), range(num_vout)))
-    outputs_str = f"Outputs ({num_vout})\n"
+    outputs_str = "Outputs ({})\n".format(num_vout)
     for addr, value, change in outputs:
         change_str = "CHANGE" if change else "NOT CHANGE"
         outputs_str += "[{}] {}\t{}\n".format(change_str, addr, value)
@@ -1197,11 +1270,21 @@ def sign_psbt_interactive(m, n):
 
         if cmd == "SIGN":
             # sign psbt and write QR code(s)
-            pass
+            psbt_signed = walletprocesspsbt(psbt_raw, psbt_validation["importmulti_idxs"], my_xprv, xpubs, m)
+
+            # show PSBT md5 fingerprint 
+            print("\nPSBT fingerprint (md5):")
+            print(hash_md5(psbt_signed["psbt"]))
+            print()
+
+            # write qr codes of signed psbt
+            write_and_verify_qr_code("PSBT Signed", "psbt-signed.png", psbt_signed["psbt"])
+            sys.exit("Finished...")
         elif cmd == "EXIT":
             sys.exit("Exiting...")
         else:
             print("Unsupported option.\n")
+
 
 def withdraw_interactive():
     """
@@ -1379,7 +1462,7 @@ if __name__ == "__main__":
 
     global network, cli_args
     network = args.network
-    cli_args = [f"-{network}", "-datadir=bitcoin-data"]
+    cli_args = ["-{}".format(network), "-datadir=bitcoin-data"]
 
     if args.program == "entropy":
         entropy(args.rng)
