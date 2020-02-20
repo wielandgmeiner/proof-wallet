@@ -1050,7 +1050,6 @@ def view_addresses_interactive(m, n):
     start = 0
     N = 10 # number of addresses to display at one time
     change = 0
-    LINE_BREAKS = ("=" * 80 + "\n") * 3
     while True:
         addresses = deriveaddresses(my_xprv, xpubs, m, start, start + N - 1, change=0)
         print("Derivation Path, Address")
@@ -1121,18 +1120,6 @@ def sign_psbt_interactive(m, n):
     print("\nValidating the PSBT...")
     psbt_validation = validate_psbt(psbt_raw, my_xprv, xpubs, m)
 
-    print("PSBT validation SUCCESSFUL:")
-    for success in psbt_validation["success"]:
-        print("* {}".format(success))
-
-    WARNINGS_HEADER = "\nPSBT validation WARNINGS:"
-    if len(psbt_validation["warning"]) > 0:
-        print(WARNINGS_HEADER)
-        for warning in psbt_validation["warning"]:
-            print("* {}".format(warning))
-    else:
-        print("{} There were no warnings during the validation process.".format(WARNINGS_HEADER))
-
     psbt = psbt_validation["psbt"]
     analysis = psbt_validation["analysis"]
     change_idxs = psbt_validation["change_idxs"]
@@ -1180,14 +1167,41 @@ def sign_psbt_interactive(m, n):
         change_str = "CHANGE" if change else "NOT CHANGE"
         outputs_str += "[{}] {}\t{}\n".format(change_str, addr, value)
 
-    print("\nSign PSBT")
-    print("Transaction ID: {}".format(txid))
-    print("Virtual size: {} vbyte".format(vsize))
-    print("Fee (total): {}".format(fee))
-    print("Fee (rate): {} sat/byte".format(fee_rate))
+    while True:
+        print("PSBT validation SUCCESSFUL:")
+        for success in psbt_validation["success"]:
+            print("* {}".format(success))
 
-    print("\n{}".format(inputs_str))
-    print("{}".format(outputs_str))
+        WARNINGS_HEADER = "\nPSBT validation WARNINGS:"
+        if len(psbt_validation["warning"]) > 0:
+            print(WARNINGS_HEADER)
+            for warning in psbt_validation["warning"]:
+                print("* {}".format(warning))
+        else:
+            print("{} There were no warnings during the validation process.".format(WARNINGS_HEADER))
+
+        print("\nSign PSBT")
+        print("Transaction ID: {}".format(txid))
+        print("Virtual size: {} vbyte".format(vsize))
+        print("Fee (total): {}".format(fee))
+        print("Fee (rate): {} sat/byte".format(fee_rate))
+
+        print("\n{}".format(inputs_str))
+        print("{}".format(outputs_str))
+
+        print("\nControls")
+        print("\t'SIGN' -- sign the psbt")
+        print("\t'EXIT' -- exit")
+        cmd = input("\nEnter your desired command: ")
+        print(LINE_BREAKS)
+
+        if cmd == "SIGN":
+            # sign psbt and write QR code(s)
+            pass
+        elif cmd == "EXIT":
+            sys.exit("Exiting...")
+        else:
+            print("Unsupported option.\n")
 
 def withdraw_interactive():
     """

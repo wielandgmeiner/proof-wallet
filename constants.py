@@ -31,3 +31,6 @@ PSBT_WSH_TYPE = "witness_v0_scripthash"
 # Analyze PSBT constants
 ANALYZE_ESTIMATED_VSIZE = "estimated_vsize"
 ANALYZE_ESTIMATED_FEERATE = "estimated_feerate"
+
+# UI
+LINE_BREAKS = ("=" * 80 + "\n") * 3
