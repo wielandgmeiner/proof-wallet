@@ -432,67 +432,39 @@ def get_xpubs_interactive(n):
 
     return xpubs
 
-def wsh_descriptor(xprv, xpubs, m, change = 0, private=False):
+def wsh_descriptor(xkeys, m, change = 0):
     """
     Creates the desired Bitcoin Core sortedmulti wsh descriptor for
     the provided extended keys
 
-    xprv: <string> BIP32 xprv
-    xpubs: List<string> BIP32 xpubs
+    xkeys: List<string> BIP32 extended keys
     m: <int> number of multisig keys required for withdrawal
     change: <int> internal or external descriptor
     """
-    xpub_for_xprv = get_xpub_from_xkey(xprv)
+
     # create descriptor without checksum
     descriptor = "wsh(sortedmulti({},".format(str(m))
-    for xpub in xpubs:
-        if xpub != xpub_for_xprv:
-            descriptor += "[{}]{}/{}/*,".format(
-                get_fingerprint_from_xkey(xpub),
-                xpub,
-                str(change)
-            )
-    descriptor += "[{}]{}/{}/*))".format(
-        get_fingerprint_from_xkey(xpub_for_xprv),
-        xprv if private == True else xpub_for_xprv,
-        str(change)
-    )
+    for xkey in xkeys:
+        fp = get_fingerprint_from_xkey(xkey)
+        descriptor += "[{}]{}/{}/*,".format(fp, xkey, str(change))
+    descriptor = descriptor[:-1] # drop trailing comma
+    descriptor += "))"
+
     # getdescriptorinfo and append checksum
     output = bitcoin_cli_json("getdescriptorinfo", descriptor)
     return descriptor + "#" + output["checksum"]
 
-def createwallet(name):
+def importmulti(idxs, xkeys, m):
     """
-    Creates wallet in Bitcoin Core idempotently
-
-    name: <string> wallet name (e.g. 'wallet-a83d4c1f')
-    """
-    # list wallets (return if already loaded)
-    wallets = bitcoin_cli_json("listwallets")
-    if name in wallets:
-        return
-    try:
-        # try loading the wallet if it already exists
-        return bitcoin_cli_json("loadwallet",  name)
-    except subprocess.CalledProcessError:
-        # create wallet with private keys disabled
-        return bitcoin_cli_checkoutput("createwallet", name, "false")
-
-def importmulti(idxs, xprv, xpubs, m):
-    """
-    Imports private key data for (external and internal) addresses at the given 
+    Imports private key data for (external and internal) addresses at the given
     indices into Bitcoin Core
 
     idxs: Set<int> address indices to perform the import
-    xprv: <string> BIP32 xprv
-    xpubs: List<string> BIP32 xpubs
+    xkeys: List<string> BIP32 extended keys
     m: <int> number of multisig keys required for withdrawal
     """
-    fp = get_fingerprint_from_xkey(xprv)
-    name = "wallet-{}".format(fp)
-    createwallet(name)
     for change in {0, 1}:
-        desc = wsh_descriptor(xprv, xpubs, m, change, True)
+        desc = wsh_descriptor(xkeys, m, change)
         args = []
         for i in idxs:
             args.append({
@@ -503,39 +475,37 @@ def importmulti(idxs, xprv, xpubs, m):
                 "keypool": False,
                 "watchonly": False
             })
-        bitcoin_cli_json("-rpcwallet={}".format(name), "importmulti", json.dumps(args))
+        bitcoin_cli_json("importmulti", json.dumps(args))
 
-def deriveaddresses(xprv, xpubs, m, start, end, change=0):
+def deriveaddresses(xkeys, m, start, end, change=0):
     """
     Derives wallet addresses based on the requested parameters
 
-    xprv: <string> BIP32 xprv
-    xpubs: List<string> BIP32 xpubs
+    xkeys: List<string> BIP32 extended keys
     m: <int> number of multisig keys required for withdrawal
+    start: <int> first index to derive address of
+    end: <int> last index to derive address of
     change: <int> internal or external address
     """
-    desc = wsh_descriptor(xprv, xpubs, m, change, False)
+    desc = wsh_descriptor(xkeys, m, change)
     return bitcoin_cli_json("deriveaddresses", desc, json.dumps([start, end]))
 
 
-def walletprocesspsbt(psbt, idxs, xprv, xpubs, m):
+def walletprocesspsbt(psbt, idxs, xkeys, m):
     """
     Signs a psbt after importing the necessary key data
 
     psbt: <str> base64 encoded psbt
     idxs: Set<int> indices to import into Bitcoin Core to sign the psbt
-    xprv: <string> BIP32 xprv
-    xpubs: List<string> BIP32 xpubs
+    xkeys: List<string> BIP32 extended keys (includes 1 xprv)
     m: <int> number of multisig keys required for withdrawal
     """
-    fp = get_fingerprint_from_xkey(xprv)
-    name = "wallet-{}".format(fp)
-    createwallet(name)
-    # import the descriptors necessary to process the provided psbt
-    importmulti(idxs, xprv, xpubs, m)
-    return bitcoin_cli_json("-rpcwallet={}".format(name), "walletprocesspsbt".format(name), psbt)
 
-def validate_psbt(psbt_raw, xprv, xpubs, m):
+    # import the descriptors necessary to process the provided psbt
+    importmulti(idxs, xkeys, m)
+    return bitcoin_cli_json("walletprocesspsbt", psbt)
+
+def validate_psbt(psbt_raw, xkeys, m):
     """
     ******************************************************************
     ********************  SECURITY CRITICAL  *************************
@@ -544,8 +514,7 @@ def validate_psbt(psbt_raw, xprv, xpubs, m):
 
 
     psbt_raw: <string>  base64 encoded psbt
-    xprv: <string> BIP32 xprv
-    xpubs: List<string> BIP32 xpubs
+    xkeys: List<string> BIP32 extended keys (includes 1 xprv)
     m: <int> number of multisig keys required for withdrawal
 
     returns: dict
@@ -573,7 +542,7 @@ def validate_psbt(psbt_raw, xprv, xpubs, m):
         pattern = "^m/([01])/(0|[1-9][0-9]*)$" # match m/{change}/{idx} and prevent leading zeros
         response["success"].append("The provided base64 encoded input is a valid PSBT.")
 
-        fps = set(map(lambda xpub: get_fingerprint_from_xkey(xpub), xpubs))
+        fps = set(map(lambda xkey: get_fingerprint_from_xkey(xkey), xkeys))
 
         # GENERAL VALIDATIONS
         if len(psbt[PSBT_INPUTS]) < 1:
@@ -639,7 +608,7 @@ def validate_psbt(psbt_raw, xprv, xpubs, m):
             change, idx = map(int, match_object.groups())
 
             # Ensure expected address implied by metadata matches actual address supplied
-            [expected_address] = deriveaddresses(xprv, xpubs, m, idx, idx, change)
+            [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
             if expected_address != actual_address:
                 sys.exit("Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(idx))
 
@@ -697,7 +666,7 @@ def validate_psbt(psbt_raw, xprv, xpubs, m):
 
             # Ensure the actual address in the Tx output matches the expected address given
             # the BIP32 derivation paths
-            [expected_address] = deriveaddresses(xprv, xpubs, m, idx, idx, change)
+            [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
             if expected_address != actual_address:
                 sys.exit("Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i))
             response["change_idxs"].append(i) # change validations pass
@@ -945,12 +914,13 @@ def view_addresses_interactive(m, n):
     if my_xpub not in xpubs:
         print("None of the provided xpubs match the provided mnemonic phrase. Exiting.")
         sys.exit()
+    xkeys = [xpub if xpub != my_xpub else my_xprv for xpub in xpubs]
 
     start = 0
     N = 10 # number of addresses to display at one time
     change = 0
     while True:
-        addresses = deriveaddresses(my_xprv, xpubs, m, start, start + N - 1, change=0)
+        addresses = deriveaddresses(xkeys, m, start, start + N - 1, change=0)
         print("Derivation Path, Address")
         for i, addr in enumerate(addresses):
             idx = start + i
@@ -1012,12 +982,13 @@ def sign_psbt_interactive(m, n):
     if my_xpub not in xpubs:
         print("None of the provided xpubs match the provided mnemonic phrase. Exiting.")
         sys.exit()
+    xkeys = [xpub if xpub != my_xpub else my_xprv for xpub in xpubs]
 
     # prompt user for base64 psbt string
     psbt_raw = input("Enter the psbt for the transaction you wish to sign: ")
 
     print("\nValidating the PSBT...")
-    psbt_validation = validate_psbt(psbt_raw, my_xprv, xpubs, m)
+    psbt_validation = validate_psbt(psbt_raw, xkeys, m)
 
     psbt = psbt_validation["psbt"]
     analysis = psbt_validation["analysis"]
@@ -1096,9 +1067,9 @@ def sign_psbt_interactive(m, n):
 
         if cmd == "SIGN":
             # sign psbt and write QR code(s)
-            psbt_signed = walletprocesspsbt(psbt_raw, psbt_validation["importmulti_idxs"], my_xprv, xpubs, m)
+            psbt_signed = walletprocesspsbt(psbt_raw, psbt_validation["importmulti_idxs"], xkeys, m)
 
-            # show PSBT md5 fingerprint 
+            # show PSBT md5 fingerprint
             print("\nPSBT fingerprint (md5):")
             print(hash_md5(psbt_signed["psbt"]))
             print()
