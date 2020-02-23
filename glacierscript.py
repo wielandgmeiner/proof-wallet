@@ -40,11 +40,14 @@ import time
 import re
 # Taken from https://github.com/keis/base58
 from base58 import b58encode_check, b58decode
-from constants import *
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
 verbose_mode = 0
+
+FEE_RATE_MULTIPLIER = 10**5 # BTC/kB -> sat/byte
+
+LINE_BREAK = "=" * 80
 
 ################################################################################################
 #
@@ -545,43 +548,43 @@ def validate_psbt(psbt_raw, xkeys, m):
         fps = set(map(lambda xkey: get_fingerprint_from_xkey(xkey), xkeys))
 
         # GENERAL VALIDATIONS
-        if len(psbt[PSBT_INPUTS]) < 1:
+        if len(psbt["inputs"]) < 1:
             print("PSBT 'inputs' array is empty")
             sys.exit()
-        if len(psbt[PSBT_OUTPUTS]) < 1:
+        if len(psbt["outputs"]) < 1:
             print("PSBT 'outputs' array is empty")
             sys.exit()
 
         # INPUTS VALIDATIONS
-        for i, _input in enumerate(psbt[PSBT_INPUTS]):
+        for i, _input in enumerate(psbt["inputs"]):
             # Ensure input spends a witness UTXO
-            if PSBT_NON_WITNESS_UTXO in _input or PSBT_WITNESS_UTXO not in _input:
+            if "non_witness_utxo" in _input or "witness_utxo" not in _input:
                 sys.exit("Tx input {} doesn't spend the expected segwit utxo.".format(i))
 
 
             # Ensure input contains BIP32 derivations
-            if PSBT_BIP32_DERIVS not in _input:
+            if "bip32_derivs" not in _input:
                 sys.exit("Tx input {} does not contain bip32 derivation metadata.".format(i))
 
             # Get the set of master fingerprints in the input's BIP32 derivations; ensure
             # they are consistent with the wallet's fingerprints
-            input_fps = set(map(lambda deriv: deriv[PSBT_BIP32_MASTER_FP], _input[PSBT_BIP32_DERIVS]))
+            input_fps = set(map(lambda deriv: deriv["master_fingerprint"], _input["bip32_derivs"]))
             if fps != input_fps:
                 sys.exit("Tx input {} does not have the correct set of fingerprints.".format(i))
 
             # Ensure the witness utxo is the expected type: witness_v0_scripthash
-            scriptpubkey_type = _input[PSBT_WITNESS_UTXO][PSBT_SCRIPTPUBKEY][PSBT_TYPE]
-            if scriptpubkey_type != PSBT_WSH_TYPE:
+            scriptpubkey_type = _input["witness_utxo"]["scriptPubKey"]["type"]
+            if scriptpubkey_type != "witness_v0_scripthash":
                 sys.exit("Tx input {} contains an incorrect scriptPubKey type: {}.".format(i, scriptpubkey_type))
 
             # Ensure input contains a witness script
-            if PSBT_WITNESS_SCRIPT not in _input:
+            if "witness_script" not in _input:
                 sys.exit("Tx input {} doesn't contain a witness script".format(i))
 
             # Ensure that the witness script hash equals the scriptPubKey
-            witness_script = _input[PSBT_WITNESS_SCRIPT][PSBT_HEX]
+            witness_script = _input["witness_script"]["hex"]
             witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
-            scriptPubKeyParts = _input[PSBT_WITNESS_UTXO][PSBT_SCRIPTPUBKEY][PSBT_ASM].split(" ")
+            scriptPubKeyParts = _input["witness_utxo"]["scriptPubKey"]["asm"].split(" ")
 
             # Ensure the scriptPubKey is the expected format: "0 WITNESS_SCRIPT_HASH"
             # Probably already validated in Bitcoin Core given the type but be extra cautious
@@ -594,11 +597,11 @@ def validate_psbt(psbt_raw, xkeys, m):
 
             # Ensure that the actual address contained in the witness_utxo matches our
             # expectations given the BIP32 derivations provided
-            actual_address = _input[PSBT_WITNESS_UTXO][PSBT_SCRIPTPUBKEY][PSBT_ADDRESS]
+            actual_address = _input["witness_utxo"]["scriptPubKey"]["address"]
 
             # Ensure each public key comes from the same derivation path and this derivation path
             # abides by the proper format (enforced by regex)
-            input_paths = set(map(lambda deriv: deriv[PSBT_BIP32_PATH], _input[PSBT_BIP32_DERIVS]))
+            input_paths = set(map(lambda deriv: deriv["path"], _input["bip32_derivs"]))
             if len(input_paths) != 1:
                 sys.exit("Tx input {} contains different bip32 derivation paths for multiple xpubs".format(i))
             input_path = input_paths.pop()
@@ -613,8 +616,8 @@ def validate_psbt(psbt_raw, xkeys, m):
                 sys.exit("Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(idx))
 
             # Ensure sighash is not set at all or set correctly
-            if PSBT_SIGHASH in _input and _input[PSBT_SIGHASH] != SIGHASH_ALL:
-                sys.exit("Tx input {} specifies an unsupported sighash, '{}'. The only supported sighash is {}".format(i, _input[PSBT_SIGHASH], SIGHASH_ALL))
+            if "sighash" in _input and _input["sighash"] != SIGHASH_ALL:
+                sys.exit("Tx input {} specifies an unsupported sighash, '{}'. The only supported sighash is {}".format(i, _input["sighash"], SIGHASH_ALL))
                 return response
 
             # Update impormulti_idxs
@@ -623,35 +626,35 @@ def validate_psbt(psbt_raw, xkeys, m):
         response["success"].append("All input validations succeeded.")
 
         # OUTPUTS VALIDATIONS
-        tx = psbt[PSBT_TX]
-        for i, output in enumerate(psbt[PSBT_OUTPUTS]):
+        tx = psbt["tx"]
+        for i, output in enumerate(psbt["outputs"]):
             # Get the corresponding Tx ouput
-            tx_out = tx[PSBT_TX_VOUT][i]
-            if PSBT_BIP32_DERIVS not in output:
+            tx_out = tx["vout"][i]
+            if "bip32_derivs" not in output:
                 # consider this output as not part of this wallet not an error or
                 # warning as this could be a valid output spend
                 continue
 
             # Get the set of fingerprints in the output's BIP32 derivations; the output cannot
             # be change if ITS fingerprints are not consistent with OUR fingerprints
-            output_fps = set(map(lambda deriv: deriv[PSBT_BIP32_MASTER_FP], output[PSBT_BIP32_DERIVS]))
+            output_fps = set(map(lambda deriv: deriv["master_fingerprint"], output["bip32_derivs"]))
             if fps != output_fps:
                 continue
 
             # The output cannot be change if it doesn't spend  back to the proper
             # output type: witness_v0_scripthash
-            scriptpubkey_type = tx_out[PSBT_SCRIPTPUBKEY][PSBT_TYPE]
-            if scriptpubkey_type != PSBT_WSH_TYPE:
+            scriptpubkey_type = tx_out["scriptPubKey"]["type"]
+            if scriptpubkey_type != "witness_v0_scripthash":
                 continue
 
             # Ensure the scriptpubkey only contains 1 address (is this necessary?)
-            if len(tx_out[PSBT_SCRIPTPUBKEY][PSBT_TX_ADDRESSES]) != 1:
+            if len(tx_out["scriptPubKey"]["addresses"]) != 1:
                 sys.exit("Tx output {} contains multiple addresses".format(i))
-            [actual_address] = tx_out[PSBT_SCRIPTPUBKEY][PSBT_TX_ADDRESSES]
+            [actual_address] = tx_out["scriptPubKey"]["addresses"]
 
             # Ensure each public key comes from the same derivation path and this derivation path
             # abides by the proper format (enforced by regex)
-            output_paths = set(map(lambda deriv: deriv[PSBT_BIP32_PATH], output[PSBT_BIP32_DERIVS]))
+            output_paths = set(map(lambda deriv: deriv["path"], output["bip32_derivs"]))
             if len(output_paths) != 1:
                 sys.exit("Tx output {} contains different bip32 derivation paths for multiple xpubs".format(i))
             output_path = output_paths.pop()
@@ -993,22 +996,22 @@ def sign_psbt_interactive(m, n):
     change_idxs = psbt_validation["change_idxs"]
 
     # Retrieve fields from decoded PSBT that need to be shown to user
-    tx = psbt[PSBT_TX]
-    txid = tx[PSBT_TX_TXID]
-    num_vin = len(tx[PSBT_TX_VIN])
-    num_vout = len(tx[PSBT_TX_VOUT])
+    tx = psbt["tx"]
+    txid = tx["txid"]
+    num_vin = len(tx["vin"])
+    num_vout = len(tx["vout"])
 
-    fee = Decimal(psbt[PSBT_FEE]).quantize(SATOSHI_PLACES)
-    fee_rate_raw = Decimal(analysis[ANALYZE_ESTIMATED_FEERATE]).quantize(SATOSHI_PLACES)
+    fee = Decimal(psbt["fee"]).quantize(SATOSHI_PLACES)
+    fee_rate_raw = Decimal(analysis["estimated_feerate"]).quantize(SATOSHI_PLACES)
     fee_rate = round(FEE_RATE_MULTIPLIER * fee_rate_raw, 1) # convert and round BTC/kB to sat/byte
-    vsize = analysis[ANALYZE_ESTIMATED_VSIZE]
+    vsize = analysis["estimated_vsize"]
 
     # Render transaction inputs
     def parse_input(psbt, idx):
-        txid = psbt[PSBT_TX][PSBT_TX_VIN][idx][PSBT_TX_TXID]
-        vout = psbt[PSBT_TX][PSBT_TX_VIN][idx][PSBT_TX_VOUT]
-        addr = psbt[PSBT_INPUTS][idx][PSBT_WITNESS_UTXO][PSBT_SCRIPTPUBKEY][PSBT_ADDRESS]
-        amount = Decimal(psbt[PSBT_INPUTS][idx][PSBT_WITNESS_UTXO][PSBT_AMOUNT]).quantize(SATOSHI_PLACES)
+        txid = psbt["tx"]["vin"][idx]["txid"]
+        vout = psbt["tx"]["vin"][idx]["vout"]
+        addr = psbt["inputs"][idx]["witness_utxo"]["scriptPubKey"]["address"]
+        amount = Decimal(psbt["inputs"][idx]["witness_utxo"]["amount"]).quantize(SATOSHI_PLACES)
         return (txid, vout, addr, amount)
 
     inputs = list(map(lambda i: parse_input(psbt, i), range(num_vin)))
@@ -1025,8 +1028,8 @@ def sign_psbt_interactive(m, n):
     # Render transaction outputs
     def parse_output(psbt, idx):
         change = idx in change_idxs
-        [addr] = psbt[PSBT_TX][PSBT_TX_VOUT][idx][PSBT_SCRIPTPUBKEY][PSBT_TX_ADDRESSES]
-        value = Decimal(psbt[PSBT_TX][PSBT_TX_VOUT][idx][PSBT_TX_VALUE]).quantize(SATOSHI_PLACES)
+        [addr] = psbt["tx"]["vout"][idx]["scriptPubKey"]["addresses"]
+        value = Decimal(psbt["tx"]["vout"][idx]["value"]).quantize(SATOSHI_PLACES)
         return (addr, value, change)
 
     outputs = list(map(lambda i: parse_output(psbt, i), range(num_vout)))
