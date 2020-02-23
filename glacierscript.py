@@ -286,17 +286,6 @@ def xor_hex_strings(str1, str2):
 
     return "{:0{}x}".format(xored, len(str1))
 
-
-def hex_private_key_to_WIF_private_key(hex_key):
-    """
-    Converts a raw 256-bit hex private key to WIF format
-    returns => <string> in hex format
-    """
-    hex_key_with_prefix = wif_prefix + hex_key + "01"
-    wif_key = b58encode_check(bytes.fromhex(hex_key_with_prefix))
-    return wif_key.decode('ascii')
-
-
 ################################################################################################
 #
 # Bitcoin helper functions
@@ -1095,7 +1084,8 @@ def sign_psbt_interactive(m, n):
 #
 # main function
 #
-# Show help, or execute one of the three main routines: entropy, deposit, withdraw
+# Show help, or execute one of the four main routines: entropy, create-wallet, view-addresses,
+# and sign-psbt
 #
 ################################################################################################
 
