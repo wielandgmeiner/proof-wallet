@@ -746,7 +746,7 @@ def write_and_verify_qr_code(name, filename, data):
     base, ext = os.path.splitext(filename)
     for deleteme in glob.glob("{}*{}".format(base, ext)):
         os.remove(deleteme)
-    MAX_QR_LEN = 250
+    MAX_QR_LEN = 1000
     if len(data) <= MAX_QR_LEN:
         write_qr_code(filename, data)
         filenames = [filename]
@@ -836,9 +836,8 @@ def entropy(length):
     """
     safety_checklist()
 
-    print("\n\n")
-    print("Making 1 random data strings....")
-    print("If strings don't appear right away, please continually move your mouse cursor. These movements generate entropy which is used to create random data.\n")
+    print("\nMaking a random data string....")
+    print("(If the string doesn't appear right away, please continually move your mouse cursor. These movements generate entropy which is used to create random data.)\n")
 
     seed = subprocess.check_output("xxd -l {} -p /dev/random".format(length), shell=True)
     seed = seed.decode('ascii').replace('\n', '')
@@ -860,8 +859,7 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
     ensure_bitcoind_running()
     require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
 
-    print("\n")
-    print("Creating cold storage private key\n")
+    print("\nCreating cold storage private key data.\n")
 
     dice_seed_string = read_dice_seed_interactive(dice_seed_length)
     dice_seed_hash = hash_sha256(dice_seed_string)
@@ -885,7 +883,7 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
         print("{}. {}".format(i + 1, word))
 
     xpub = get_xpub_from_xkey(xprv)
-    print("xpub:\n{}\n".format(xpub))
+    print("\nxpub:\n{}\n".format(xpub))
 
     write_and_verify_qr_code("xpub", "xpub.png", xpub)
 
@@ -920,28 +918,28 @@ def view_addresses_interactive(m, n):
     N = 10 # number of addresses to display at one time
     change = 0
     while True:
+        print(LINE_BREAK)
         addresses = deriveaddresses(xkeys, m, start, start + N - 1, change=0)
         print("Derivation Path, Address")
         for i, addr in enumerate(addresses):
             idx = start + i
             print("[{}] m/{}/{}: {}".format(str(i), str(change), idx, addr))
         print("\nControls:")
-        print("\t'NEXT' -- view next {} addresses".format(N))
-        print("\t'PREV' -- view previous {} addresses".format(N))
-        print("\t'CHANGE' -- toggle to/from change addresses")
-        print("\t'0' -- save the address at index 0 as a QR code in address.png")
-        print("\t'1' -- save the address at index 1 as a QR code in address.png")
-        print("\t'2' -- save the address at index 2 as a QR code in address.png")
-        print("\t'3' -- save the address at index 3 as a QR code in address.png")
-        print("\t'4' -- save the address at index 4 as a QR code in address.png")
-        print("\t'5' -- save the address at index 5 as a QR code in address.png")
-        print("\t'6' -- save the address at index 6 as a QR code in address.png")
-        print("\t'7' -- save the address at index 7 as a QR code in address.png")
-        print("\t'8' -- save the address at index 8 as a QR code in address.png")
-        print("\t'9' -- save the address at index 9 as a QR code in address.png")
-        print("\t'EXIT' -- exit")
+        print("    'NEXT' -- view next {} addresses".format(N))
+        print("    'PREV' -- view previous {} addresses".format(N))
+        print("    'CHANGE' -- toggle to/from change addresses")
+        print("    '0' -- save the address at index [0] as a QR code in address.png")
+        print("    '1' -- save the address at index [1] as a QR code in address.png")
+        print("    '2' -- save the address at index [2] as a QR code in address.png")
+        print("    '3' -- save the address at index [3] as a QR code in address.png")
+        print("    '4' -- save the address at index [4] as a QR code in address.png")
+        print("    '5' -- save the address at index [5] as a QR code in address.png")
+        print("    '6' -- save the address at index [6] as a QR code in address.png")
+        print("    '7' -- save the address at index [7] as a QR code in address.png")
+        print("    '8' -- save the address at index [8] as a QR code in address.png")
+        print("    '9' -- save the address at index [9] as a QR code in address.png")
+        print("    'EXIT' -- exit\n")
         cmd = input("Enter your desired command: ")
-        print(LINE_BREAKS)
 
         if cmd == "NEXT":
             start += N
@@ -985,7 +983,7 @@ def sign_psbt_interactive(m, n):
     xkeys = [xpub if xpub != my_xpub else my_xprv for xpub in xpubs]
 
     # prompt user for base64 psbt string
-    psbt_raw = input("Enter the psbt for the transaction you wish to sign: ")
+    psbt_raw = input("\nEnter the psbt for the transaction you wish to sign: ")
 
     print("\nValidating the PSBT...")
     psbt_validation = validate_psbt(psbt_raw, xkeys, m)
@@ -1038,6 +1036,7 @@ def sign_psbt_interactive(m, n):
         outputs_str += "[{}] {}\t{}\n".format(change_str, addr, value)
 
     while True:
+        print(LINE_BREAK)
         print("PSBT validation SUCCESSFUL:")
         for success in psbt_validation["success"]:
             print("* {}".format(success))
@@ -1050,7 +1049,11 @@ def sign_psbt_interactive(m, n):
         else:
             print("{} There were no warnings during the validation process.".format(WARNINGS_HEADER))
 
-        print("\nSign PSBT")
+        print("\n+-----------------------+")
+        print("|                       |")
+        print("|  Transaction Summary  |")
+        print("|                       |")
+        print("+-----------------------+")
         print("Transaction ID: {}".format(txid))
         print("Virtual size: {} vbyte".format(vsize))
         print("Fee (total): {}".format(fee))
@@ -1059,15 +1062,18 @@ def sign_psbt_interactive(m, n):
         print("\n{}".format(inputs_str))
         print("{}".format(outputs_str))
 
-        print("\nControls")
-        print("\t'SIGN' -- sign the psbt")
-        print("\t'EXIT' -- exit")
+        print("Controls:")
+        print("    'SIGN' -- sign the psbt")
+        print("    'EXIT' -- exit")
         cmd = input("\nEnter your desired command: ")
-        print(LINE_BREAKS)
 
         if cmd == "SIGN":
             # sign psbt and write QR code(s)
             psbt_signed = walletprocesspsbt(psbt_raw, psbt_validation["importmulti_idxs"], xkeys, m)
+
+            # show text of signed PSBT
+            print("\nRaw signed psbt (base64):")
+            print(psbt_signed["psbt"])
 
             # show PSBT md5 fingerprint
             print("\nPSBT fingerprint (md5):")
@@ -1075,8 +1081,8 @@ def sign_psbt_interactive(m, n):
             print()
 
             # write qr codes of signed psbt
-            write_and_verify_qr_code("PSBT Signed", "psbt-signed.png", psbt_signed["psbt"])
-            sys.exit("Finished...")
+            write_and_verify_qr_code("signed psbt", "psbt-signed.png", psbt_signed["psbt"])
+            sys.exit()
         elif cmd == "EXIT":
             sys.exit("Exiting...")
         else:
