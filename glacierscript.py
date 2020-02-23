@@ -1111,7 +1111,7 @@ if __name__ == "__main__":
 
     global network, cli_args
     network = args.network
-    cli_args = ["-{}".format(network), "-datadir=bitcoin-data"]
+    cli_args = ["-{}".format(network)]
 
     if args.program == "entropy":
         entropy(args.rng)
