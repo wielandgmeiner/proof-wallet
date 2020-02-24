@@ -605,8 +605,8 @@ def validate_psbt(psbt_raw, xkeys, m):
                 sys.exit("Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(idx))
 
             # Ensure sighash is not set at all or set correctly
-            if "sighash" in _input and _input["sighash"] != SIGHASH_ALL:
-                sys.exit("Tx input {} specifies an unsupported sighash, '{}'. The only supported sighash is {}".format(i, _input["sighash"], SIGHASH_ALL))
+            if "sighash" in _input and _input["sighash"] != "ALL":
+                sys.exit("Tx input {} specifies an unsupported sighash, '{}'. The only supported sighash is {}".format(i, _input["sighash"], "ALL"))
                 return response
 
             # Update impormulti_idxs
