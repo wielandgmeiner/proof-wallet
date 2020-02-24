@@ -390,7 +390,7 @@ def get_mnemonic_interactive():
     return => <string> xprv derived from the mnemonic (and empty passphrase)
     """
     M = Mnemonic()
-    raw_mnemonic = input("Enter the 24 word mnemonic phrase (separate the words with whitespace): ")
+    raw_mnemonic = input("\nEnter the 24 word mnemonic phrase (separate the words with whitespace): ")
     words = raw_mnemonic.split()
     mnemonic = " ".join(words)
     if len(words) != 24:
@@ -411,9 +411,9 @@ def get_xpubs_interactive(n):
     returns: List<string> the list of validated xpubs
     """
     xpubs = []
-    print("Input {} valid xpubs".format(n))
+    print("\nInput {} valid xpubs".format(n))
     for idx in range(n):
-        xpub = input("Enter xpub #{}: ".format(idx+1))
+        xpub = input("\nEnter xpub #{}: ".format(idx+1))
         is_valid_xpub(xpub)
         xpubs.append(xpub)
 
