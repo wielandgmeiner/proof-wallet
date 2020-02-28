@@ -511,6 +511,7 @@ def validate_psbt(psbt_raw, xkeys, m):
 
     returns: dict
         success:          List<str> successful validations performed on psbt
+        error:            <str> an error if one is found
         warning:          List<str> warnings about psbt
         psbt:             <dict> python dict loaded from decodepsbt RPC call
         change_idxs:      List<int> list of change indices
@@ -519,6 +520,7 @@ def validate_psbt(psbt_raw, xkeys, m):
     """
     response = {
         "success": [],
+        "error": None,
         "warning": [],
         "psbt": None,
         "change_idxs": [],
@@ -538,37 +540,41 @@ def validate_psbt(psbt_raw, xkeys, m):
 
         # GENERAL VALIDATIONS
         if len(psbt["inputs"]) < 1:
-            print("PSBT 'inputs' array is empty")
-            sys.exit()
+            response["error"] = "PSBT 'inputs' array is empty"
+            return response
         if len(psbt["outputs"]) < 1:
-            print("PSBT 'outputs' array is empty")
-            sys.exit()
+            response["error"] = "PSBT 'outputs' array is empty"
+            return response
 
         # INPUTS VALIDATIONS
         for i, _input in enumerate(psbt["inputs"]):
             # Ensure input spends a witness UTXO
             if "non_witness_utxo" in _input or "witness_utxo" not in _input:
-                sys.exit("Tx input {} doesn't spend the expected segwit utxo.".format(i))
-
+                response["error"] = "Tx input {} doesn't spend the expected segwit utxo.".format(i)
+                return response
 
             # Ensure input contains BIP32 derivations
             if "bip32_derivs" not in _input:
-                sys.exit("Tx input {} does not contain bip32 derivation metadata.".format(i))
+                response["error"] = "Tx input {} does not contain bip32 derivation metadata.".format(i)
+                return response
 
             # Get the set of master fingerprints in the input's BIP32 derivations; ensure
             # they are consistent with the wallet's fingerprints
             input_fps = set(map(lambda deriv: deriv["master_fingerprint"], _input["bip32_derivs"]))
             if fps != input_fps:
-                sys.exit("Tx input {} does not have the correct set of fingerprints.".format(i))
+                response["error"] = "Tx input {} does not have the correct set of fingerprints.".format(i)
+                return response
 
             # Ensure the witness utxo is the expected type: witness_v0_scripthash
             scriptpubkey_type = _input["witness_utxo"]["scriptPubKey"]["type"]
             if scriptpubkey_type != "witness_v0_scripthash":
-                sys.exit("Tx input {} contains an incorrect scriptPubKey type: {}.".format(i, scriptpubkey_type))
+                response["error"] = "Tx input {} contains an incorrect scriptPubKey type: {}.".format(i, scriptpubkey_type)
+                return response
 
             # Ensure input contains a witness script
             if "witness_script" not in _input:
-                sys.exit("Tx input {} doesn't contain a witness script".format(i))
+                response["error"] = "Tx input {} doesn't contain a witness script".format(i)
+                return response
 
             # Ensure that the witness script hash equals the scriptPubKey
             witness_script = _input["witness_script"]["hex"]
@@ -578,11 +584,14 @@ def validate_psbt(psbt_raw, xkeys, m):
             # Ensure the scriptPubKey is the expected format: "0 WITNESS_SCRIPT_HASH"
             # Probably already validated in Bitcoin Core given the type but be extra cautious
             if len(scriptPubKeyParts) != 2:
-                sys.exit("Tx input {} has an unexpected scriptPubKey".format(i))
+                response["error"] = "Tx input {} has an unexpected scriptPubKey".format(i)
+                return response
             if scriptPubKeyParts[0] != "0":
-                sys.exit("Tx input {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0]))
+                response["error"] = "Tx input {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0])
+                return response
             if witness_script_hash != scriptPubKeyParts[1]:
-                sys.exit("The hash of the witness script for Tx input {} does not match the provided witness UTXO scriptPubKey".format(i))
+                response["error"] = "The hash of the witness script for Tx input {} does not match the provided witness UTXO scriptPubKey".format(i)
+                return response
 
             # Ensure that the actual address contained in the witness_utxo matches our
             # expectations given the BIP32 derivations provided
@@ -592,21 +601,24 @@ def validate_psbt(psbt_raw, xkeys, m):
             # abides by the proper format (enforced by regex)
             input_paths = set(map(lambda deriv: deriv["path"], _input["bip32_derivs"]))
             if len(input_paths) != 1:
-                sys.exit("Tx input {} contains different bip32 derivation paths for multiple xpubs".format(i))
+                response["error"] = "Tx input {} contains different bip32 derivation paths for multiple xpubs".format(i)
+                return response
             input_path = input_paths.pop()
             match_object = re.match(pattern, input_path)
             if match_object is None:
-                sys.exit("Tx input {} contains an unsupported bip32 derivation path: {}".format(i, input_path))
+                response["error"] = "Tx input {} contains an unsupported bip32 derivation path: {}".format(i, input_path)
+                return response
             change, idx = map(int, match_object.groups())
 
             # Ensure expected address implied by metadata matches actual address supplied
             [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
             if expected_address != actual_address:
-                sys.exit("Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(idx))
+                response["error"] = "Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(idx)
+                return response
 
             # Ensure sighash is not set at all or set correctly
             if "sighash" in _input and _input["sighash"] != "ALL":
-                sys.exit("Tx input {} specifies an unsupported sighash, '{}'. The only supported sighash is {}".format(i, _input["sighash"], "ALL"))
+                response["error"] = "Tx input {} specifies an unsupported sighash, '{}'".format(i, _input["sighash"])
                 return response
 
             # Update impormulti_idxs
@@ -645,22 +657,26 @@ def validate_psbt(psbt_raw, xkeys, m):
             # abides by the proper format (enforced by regex)
             output_paths = set(map(lambda deriv: deriv["path"], output["bip32_derivs"]))
             if len(output_paths) != 1:
-                sys.exit("Tx output {} contains different bip32 derivation paths for multiple xpubs".format(i))
+                response["error"] = "Tx output {} contains different bip32 derivation paths for multiple xpubs".format(i)
+                return response
             output_path = output_paths.pop()
             match_object = re.match(pattern, output_path)
             if match_object is None:
-                sys.exit("Tx output {} contains an unsupported bip32 derivation path: {}".format(i, output_path))
+                response["error"] = "Tx output {} contains an unsupported bip32 derivation path: {}".format(i, output_path)
+                return response
             change, idx = map(int, match_object.groups())
 
             # Ensure the actual address in the Tx output matches the expected address given
             # the BIP32 derivation paths
             [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
             if expected_address != actual_address:
-                sys.exit("Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i))
+                response["error"] = "Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i)
+                return response
 
             # Ensure that the witness script hash maps to the transaction output's scriptPubKey
             if "witness_script" not in output:
-                sys.exit("Tx output {} contains no witness script".format(i))
+                response["error"] = "Tx output {} contains no witness script".format(i)
+                return response
             witness_script = output["witness_script"]["hex"]
             witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
             scriptPubKeyParts = tx_out["scriptPubKey"]["asm"].split(" ")
@@ -668,11 +684,14 @@ def validate_psbt(psbt_raw, xkeys, m):
             # Ensure the scriptPubKey is the expected format: "0 WITNESS_SCRIPT_HASH"
             # Probably already validated in Bitcoin Core given the type but be extra cautious
             if len(scriptPubKeyParts) != 2:
-                sys.exit("Tx output {} has an unexpected scriptPubKey".format(i))
+                response["error"] = "Tx output {} has an unexpected scriptPubKey".format(i)
+                return response
             if scriptPubKeyParts[0] != "0":
-                sys.exit("Tx input {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0]))
+                response["error"] = "Tx input {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0])
+                return response
             if witness_script_hash != scriptPubKeyParts[1]:
-                sys.exit("The hash of the witness script for Tx output {} does not match the provided witness script".format(i))
+                response["error"] = "The hash of the witness script for Tx output {} does not match the provided witness script".format(i)
+                return response
 
             # Allow a user to spend change to an external address, but display a warning
             if change == 0:
@@ -693,10 +712,10 @@ def validate_psbt(psbt_raw, xkeys, m):
 
     # Catches exceptions in decoding or analyzing PSBT
     except subprocess.CalledProcessError:
-        sys.exit("The provided base64 encoded input is NOT a valid PSBT")
+        response["error"] = "The provided base64 encoded input is NOT a valid PSBT"
     # Catch any other unexpected exception that may occur
     except:
-        sys.exit("An unexpected error occurred during the PSBT validation process")
+        response["error"] = "An unexpected error occurred during the PSBT validation process"
     return response
 
 ################################################################################################
@@ -996,6 +1015,9 @@ def sign_psbt_interactive(m, n):
 
     print("\nValidating the PSBT...")
     psbt_validation = validate_psbt(psbt_raw, xkeys, m)
+    if psbt_validation["error"] is not None:
+        print("Error: {}".format(psbt_validation["error"]))
+        sys.exit()
 
     psbt = psbt_validation["psbt"]
     analysis = psbt_validation["analysis"]
