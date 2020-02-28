@@ -624,16 +624,16 @@ def validate_psbt(psbt_raw, xkeys, m):
                 # warning as this could be a valid output spend
                 continue
 
-            # Get the set of fingerprints in the output's BIP32 derivations; the output cannot
-            # be change if ITS fingerprints are not consistent with OUR fingerprints
-            output_fps = set(map(lambda deriv: deriv["master_fingerprint"], output["bip32_derivs"]))
-            if fps != output_fps:
-                continue
-
             # The output cannot be change if it doesn't spend  back to the proper
             # output type: witness_v0_scripthash
             scriptpubkey_type = tx_out["scriptPubKey"]["type"]
             if scriptpubkey_type != "witness_v0_scripthash":
+                continue
+
+            # Get the set of fingerprints in the output's BIP32 derivations; the output cannot
+            # be change if ITS fingerprints are not consistent with OUR fingerprints
+            output_fps = set(map(lambda deriv: deriv["master_fingerprint"], output["bip32_derivs"]))
+            if fps != output_fps:
                 continue
 
             # Ensure the scriptpubkey only contains 1 address (is this necessary?)
@@ -652,15 +652,32 @@ def validate_psbt(psbt_raw, xkeys, m):
                 sys.exit("Tx output {} contains an unsupported bip32 derivation path: {}".format(i, output_path))
             change, idx = map(int, match_object.groups())
 
-            # Allow a user to spend change to an external address, but display a warning
-            if change == 0:
-                response["warning"].append("Tx output {} spends change to an external receive address".format(i))
-
             # Ensure the actual address in the Tx output matches the expected address given
             # the BIP32 derivation paths
             [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
             if expected_address != actual_address:
                 sys.exit("Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i))
+
+            # Ensure that the witness script hash maps to the transaction output's scriptPubKey
+            if "witness_script" not in output:
+                sys.exit("Tx output {} contains no witness script".format(i))
+            witness_script = output["witness_script"]["hex"]
+            witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
+            scriptPubKeyParts = tx_out["scriptPubKey"]["asm"].split(" ")
+
+            # Ensure the scriptPubKey is the expected format: "0 WITNESS_SCRIPT_HASH"
+            # Probably already validated in Bitcoin Core given the type but be extra cautious
+            if len(scriptPubKeyParts) != 2:
+                sys.exit("Tx output {} has an unexpected scriptPubKey".format(i))
+            if scriptPubKeyParts[0] != "0":
+                sys.exit("Tx input {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0]))
+            if witness_script_hash != scriptPubKeyParts[1]:
+                sys.exit("The hash of the witness script for Tx output {} does not match the provided witness script".format(i))
+
+            # Allow a user to spend change to an external address, but display a warning
+            if change == 0:
+                response["warning"].append("Tx output {} spends change to an external receive address".format(i))
+
             response["change_idxs"].append(i) # change validations pass
 
         # Display a warning to the user if we can't recognize any change (suspicious)
