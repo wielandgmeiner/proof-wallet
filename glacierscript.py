@@ -495,7 +495,7 @@ def walletprocesspsbt(psbt, idxs, xkeys, m):
 
     # import the descriptors necessary to process the provided psbt
     importmulti(idxs, xkeys, m)
-    return bitcoin_cli_json("walletprocesspsbt", psbt)
+    return bitcoin_cli_json("walletprocesspsbt", psbt, "true", "ALL")
 
 def validate_psbt(psbt_raw, xkeys, m):
     """
