@@ -43,11 +43,15 @@ cd /home/ubuntu/bitcoin
 export BDB_PREFIX='/home/ubuntu/bitcoin/db4'
 ./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
 make
+
+# Add the generated binaries to the PATH
+sudo cp src/bitcoin-cli /usr/local/bin/
+sudo cp src/bitcoind /usr/local/bin/
 ```
 
 _Install QR code dependencies_
 ```
-sudo apt-get install qrencode zbar-tools
+sudo apt-get install qrencode zbar-tools -y
 ```
 
 _Download Proof Wallet_
@@ -71,12 +75,12 @@ python3 glacierscript.py create-wallet
 Prompt the user for at least 100 dice rolls and the hex characters generated in the `entropy` step. The programs outputs a 24 words BIP39 mnemonic phrase and xpub to the console; it also saves a copy of the xpub as a QR code image in the wallet directory.
 
 ```
-glacierscript.py view-addresses -m [M] -n [N]
+python3 glacierscript.py view-addresses -m [M] -n [N]
 ```
 
 Prompts the user to enter the BIP39 mnemonic phrase and N xpubs in the terminal. Afterwards 10 wallet addresses are displayed at a time, starting from `m/0/0` to `m/0/9`. By entering `NEXT`, `PREV`, and `CHANGE` in the terminal, the user can browse the rest of the addresses in the wallet.
 
 ```
-glacierscript.py sign-psbt -m [M] -n [N]
+python3 glacierscript.py sign-psbt -m [M] -n [N]
 ```
 Prompts the user to enter the BIP39 mnemonic phrase and N xpubs in the terminal. The the user must enter a base64 encoded psbt to sign. If the psbt passes the stringent validations, a summary of the transaction is output to the console. The user can analyze the transaction and optionally `SIGN` it or `EXIT` the program. If the user chooses to sign it, Proof Wallet outputs the updated psbt to the terminal and QR code(s) with the signed psbt data are save in the wallet directory.
