@@ -1129,27 +1129,65 @@ def sign_psbt_interactive(m, n):
 ################################################################################################
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('program', choices=[
-                        'entropy', 'create-wallet', 'view-addresses', 'sign-psbt'])
-    parser.add_argument('--network', choices=['mainnet', 'testnet', 'regtest'],
-                        help="Bitcoin network to use", default='testnet')
-    parser.add_argument("-d", "--dice", type=int,
-                        help="Minimum number of dice rolls to use for entropy when generating private keys (default: 100)", default=100)
-    parser.add_argument("-r", "--rng", type=int,
-                        help="Minimum number of 8-bit bytes to use for computer entropy when generating private keys (default: 32)", default=32)
-    parser.add_argument(
-        "-m", type=int, help="Number of signing keys required in an m-of-n multisig wallet (default m-of-n = 1-of-2)", default=1)
-    parser.add_argument(
-        "-n", type=int, help="Number of total keys required in an m-of-n multisig wallet (default m-of-n = 1-of-2)", default=2)
+    parser = argparse.ArgumentParser(epilog="For more help, include a subcommand, e.g. `./glacierscript.py entropy --help`")
     parser.add_argument('-v', '--verbose', action='store_true', help='increase output verbosity')
-    args = parser.parse_args()
 
+    subs = parser.add_subparsers(title='Subcommands', dest='program')
+
+    def add_networks(parser):
+        parser.add_argument('--testnet', action='store_true', help=argparse.SUPPRESS)
+        parser.add_argument('--regtest', action='store_true', help=argparse.SUPPRESS)
+
+    def add_rng(parser):
+        """Add the --rng option to the supplied parser."""
+        help_text = "Minimum number of 8-bit bytes to use for computer entropy when generating private keys (default: 32)"
+        parser.add_argument("-r", "--rng", type=int, help=help_text, default=32)
+
+    def add_m(parser):
+        """Add the -m option to the supplied parser."""
+        help_text = "Number of signing keys required in an m-of-n multisig wallet (default m-of-n = 1-of-2)"
+        parser.add_argument("-m", type=int, help=help_text, default=1)
+
+    def add_n(parser):
+        """Add the -n option to the supplied parser."""
+        help_text = "Number of total keys required in an m-of-n multisig wallet (default m-of-n = 1-of-2)"
+        parser.add_argument("-n", type=int, help=help_text, default=2)
+
+    # Entropy parser
+    parser_entropy = subs.add_parser('entropy', help="Generate computer entropy")
+    add_rng(parser_entropy)
+    add_networks(parser_entropy)
+
+    # Create wallet parser
+    parser_create_wallet = subs.add_parser('create-wallet', help="Create a BIP39 HD wallet")
+    add_rng(parser_create_wallet)
+    dice_help = "Minimum number of dice rolls to use for entropy when generating private keys (default: 100)"
+    parser_create_wallet.add_argument("-d", "--dice", type=int, help=dice_help, default=100)
+    add_networks(parser_create_wallet)
+
+    # View addresses parser
+    parser_view_addresses = subs.add_parser('view-addresses', help="View deposit addresses")
+    add_m(parser_view_addresses)
+    add_n(parser_view_addresses)
+    add_networks(parser_view_addresses)
+
+    # Sign psbt parser
+    parser_sign_psbt = subs.add_parser('sign-psbt', help="Sign a PSBT")
+    add_m(parser_sign_psbt)
+    add_n(parser_sign_psbt)
+    add_networks(parser_sign_psbt)
+
+    args = parser.parse_args()
     verbose_mode = args.verbose
 
     global network, cli_args
-    network = args.network
-    cli_args = ["-{}".format(network)]
+    network = "testnet" if args.testnet else ("regtest" if args.regtest else "mainnet")
+    cli_args = {
+        'mainnet': [],
+        'testnet': ["-testnet"],
+        'regtest': ["-regtest"],
+    }[network]
+
 
     if args.program == "entropy":
         entropy(args.rng)
