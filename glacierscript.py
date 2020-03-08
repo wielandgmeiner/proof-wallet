@@ -171,7 +171,7 @@ def validate_rng_seed(seed, min_length):
     """
 
     if len(seed) < min_length:
-        print("Error: Computer entropy must be at least {0} characters long".format(min_length))
+        print("Error: Computer entropy must be at least {0} characters long.".format(min_length))
         return False
 
     if len(seed) % 2 != 0:
@@ -221,7 +221,7 @@ def validate_dice_seed(dice, min_length):
     """
 
     if len(dice) < min_length:
-        print("Error: You must provide at least {0} dice rolls".format(min_length))
+        print("Error: You must provide at least {0} dice rolls.".format(min_length))
         return False
 
     for die in dice:
@@ -231,7 +231,7 @@ def validate_dice_seed(dice, min_length):
                 print("Error: Dice rolls must be between 1 and 6.")
                 return False
         except ValueError:
-            print("Error: Dice rolls must be numbers between 1 and 6")
+            print("Error: Dice rolls must be numbers between 1 and 6.")
             return False
 
     return True

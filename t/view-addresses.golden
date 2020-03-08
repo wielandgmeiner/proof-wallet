@@ -1,0 +1,268 @@
+Are you running this on a computer WITHOUT a network connection of any kind? (y/n)?Have the wireless cards in this computer been physically removed? (y/n)?Are you running on battery power? (y/n)?Are you running on an operating system booted from a USB drive? (y/n)?Is your screen hidden from view of windows, cameras, and other people? (y/n)?Are smartphones and all other nearby devices turned off and in a Faraday bag? (y/n)?
+Enter the 24 word mnemonic phrase (separate the words with whitespace): 
+Input 2 valid xpubs
+
+Enter xpub #1: 
+Enter xpub #2: ================================================================================
+Derivation Path, Address
+[0] m/0/0: bcrt1qumkqe0wvulrdq5me898ad9jg7srrulafv7z7dc66n2mq4aavh4yqk2559z
+[1] m/0/1: bcrt1qz8kklfw96letuaklg9vtu8wekw3e9cpwd2shx6tvlwfr72us6e0ssyl0lj
+[2] m/0/2: bcrt1qrpdpk2l4znph4vcte99tt7wnq6phkhnw9ss4m0cu8paulj2n7jmqn3c240
+[3] m/0/3: bcrt1q8kvzd6feufreg48fcj6m7uqtad4x2k5uwv78ardjxrgm5fkdg9ns5hzlsz
+[4] m/0/4: bcrt1qdm6uwfg4292g4ppvrel0kvfc08qaq8z4p53m08tlue9qqhx40zks3cnzk2
+[5] m/0/5: bcrt1q4el5hkh544p4l9lef2unn0vwz9lmvwfwt8enw2jpk86sdz5fk76sf4p5nl
+[6] m/0/6: bcrt1q0xy0ayn4ntc9he62dv56z5v6z2zt2mw3p4s8r68g8pjnzxyrc49s7rlghf
+[7] m/0/7: bcrt1qat7w0d86yp02vtmec6xkv3anerhfna3a0gh6uqasgp9haw4wguhsfrzuqg
+[8] m/0/8: bcrt1q5x8mgfh2jl77845u26gcxmujxh0v6xlr98932kuf36mkt2w2ff0qtapxll
+[9] m/0/9: bcrt1qx3g9gkay9ml6ed84nzcr8zwhpgj7c36pvqe0jzh4llj8vcqs4tusp6rdq7
+
+Controls:
+    'NEXT' -- view next 10 addresses
+    'PREV' -- view previous 10 addresses
+    'CHANGE' -- toggle to/from change addresses
+    '0' -- save the address at index [0] as a QR code in address.png
+    '1' -- save the address at index [1] as a QR code in address.png
+    '2' -- save the address at index [2] as a QR code in address.png
+    '3' -- save the address at index [3] as a QR code in address.png
+    '4' -- save the address at index [4] as a QR code in address.png
+    '5' -- save the address at index [5] as a QR code in address.png
+    '6' -- save the address at index [6] as a QR code in address.png
+    '7' -- save the address at index [7] as a QR code in address.png
+    '8' -- save the address at index [8] as a QR code in address.png
+    '9' -- save the address at index [9] as a QR code in address.png
+    'EXIT' -- exit
+
+Enter your desired command: ================================================================================
+Derivation Path, Address
+[0] m/0/10: bcrt1qzqlyh9uvxvh99lr258m5h2p8n8aasldyzlfhh29rztl3zsd5n66svydwza
+[1] m/0/11: bcrt1qyqrqmj8u0w5wf7qdcpc6m052cmgz8katpad76u3hr8v6xqvhn3sq070dgx
+[2] m/0/12: bcrt1qff0h4r668lh8m7w6k456lv29sx4q98aq3u0nxdx5wr4kqszfcz5s3wv5uc
+[3] m/0/13: bcrt1qujxuvhz8jwws6nu8fxazu2y7rdep4u06czrvrs2njsxf327cxdrs6mwz8c
+[4] m/0/14: bcrt1qzvwrtaaqlfjrtcl0vz2h8uw0dkcrma0msqt7d5schwvyajctq8rqk6rq0e
+[5] m/0/15: bcrt1qscvvslmrruajjlznwt0pt80xpqvkq9nmhgy6hwrm3g2mp4nftefsknk459
+[6] m/0/16: bcrt1quyeg4y3g793sjpvpnl8np26x5kqfdj83v32nkj7uaz82kulnampqkptlvg
+[7] m/0/17: bcrt1qdt56ce0yrw9upqzxfjdvqxzrs68fhqglxn2t9sxuejem0usl4zvsx72e4n
+[8] m/0/18: bcrt1qzcjc0vvh3cxfkpz93da0tacuu4ys6kq80844ffrce6k630r3t7wqes2hrt
+[9] m/0/19: bcrt1q2lurl3gxklare9q2gxkg8kyvmkcvsga40lvs3mhq55cwczyreevsrcv788
+
+Controls:
+    'NEXT' -- view next 10 addresses
+    'PREV' -- view previous 10 addresses
+    'CHANGE' -- toggle to/from change addresses
+    '0' -- save the address at index [0] as a QR code in address.png
+    '1' -- save the address at index [1] as a QR code in address.png
+    '2' -- save the address at index [2] as a QR code in address.png
+    '3' -- save the address at index [3] as a QR code in address.png
+    '4' -- save the address at index [4] as a QR code in address.png
+    '5' -- save the address at index [5] as a QR code in address.png
+    '6' -- save the address at index [6] as a QR code in address.png
+    '7' -- save the address at index [7] as a QR code in address.png
+    '8' -- save the address at index [8] as a QR code in address.png
+    '9' -- save the address at index [9] as a QR code in address.png
+    'EXIT' -- exit
+
+Enter your desired command: ================================================================================
+Derivation Path, Address
+[0] m/0/20: bcrt1qhff3san22kv3sqzexk7adjswasyuyugkasxx6qpatdlnlqu99jasc9mgu8
+[1] m/0/21: bcrt1q2deqd22ddytqv3a5tm0pl3fr45vpeg046v06dty50k4przlpswtskre8qd
+[2] m/0/22: bcrt1qz7esr7fqkg3ez3kya4ac00x9x5x5chyn3qjr6af2s2alm605ym5sj3nagx
+[3] m/0/23: bcrt1qucvuk8256h7ny7mqqhpprknvx4mfasgpgx36jexjnwnalwnf0qeqal6ja5
+[4] m/0/24: bcrt1qvujxxh4xgqt4qc9fgqnrd40s4wr40egjy2q7cskszm8xrw0e045scd0f46
+[5] m/0/25: bcrt1q0epy6zdgy85tkquqfquyl36dsddyq4cwmskzfarhdgr6usvennkqzku2zt
+[6] m/0/26: bcrt1q87l3ec08zyv7l8xgt422w85syt8ckv0qlc7suv30fnprw90dvm7s2tyzaz
+[7] m/0/27: bcrt1qwslx4wng7smlqr7h0wp9lq683zd8x7ryu99p33qtuf3xl483d5nsc3wq8d
+[8] m/0/28: bcrt1qmrf4rxud09vsy3p8hgvmd77rs7s9y9lc43chr7aep00sha0ffp7qy5rrqe
+[9] m/0/29: bcrt1qnj66r9ey2u0g96k2uel5p9tnmjcz4664dd0ag298u9ljvg9t3p5qnfs7pz
+
+Controls:
+    'NEXT' -- view next 10 addresses
+    'PREV' -- view previous 10 addresses
+    'CHANGE' -- toggle to/from change addresses
+    '0' -- save the address at index [0] as a QR code in address.png
+    '1' -- save the address at index [1] as a QR code in address.png
+    '2' -- save the address at index [2] as a QR code in address.png
+    '3' -- save the address at index [3] as a QR code in address.png
+    '4' -- save the address at index [4] as a QR code in address.png
+    '5' -- save the address at index [5] as a QR code in address.png
+    '6' -- save the address at index [6] as a QR code in address.png
+    '7' -- save the address at index [7] as a QR code in address.png
+    '8' -- save the address at index [8] as a QR code in address.png
+    '9' -- save the address at index [9] as a QR code in address.png
+    'EXIT' -- exit
+
+Enter your desired command: ================================================================================
+Derivation Path, Address
+[0] m/0/30: bcrt1qk2qkun4tcu73ne8r0gw39s69gysfezvzvc6pm76v0t8h63r3awgqkw0zdh
+[1] m/0/31: bcrt1qg58w84kthumkrxt2cnrqmvm5mqj7a4nhdfcqn3pc9mf8ag07ymfsdx64xa
+[2] m/0/32: bcrt1qcqaj8cq660fh7t30ew00gc02y0dqltajf0xhnyer7apq0jr0s7vq04pqxq
+[3] m/0/33: bcrt1qnh8u8ek2hsj8xn39uttayecs6a7wd3vd6g5qzh6awkdje7ancxlscjedtp
+[4] m/0/34: bcrt1qvgrfht8pzeq48zxr5xjep488gsfela880jw35dky3rlx9zg4g4dqay6au9
+[5] m/0/35: bcrt1q6jugq5ssca5gu9axz3errtyj5t92s4k79s5x2z4fdzndlhgu75csef5rqj
+[6] m/0/36: bcrt1q7r0ze54lndp058qqynw54qd7yf48njets9qegju9mqy274tyt9nqaxdwlq
+[7] m/0/37: bcrt1qyhgjy73t55crn9kekdkdc4480cu2qpdgusz9f2xekszkhexg62us5e44ea
+[8] m/0/38: bcrt1qencf5w2x9fcrxelcgxd5vgnzd0ftx622s6xjzr4v5pyl9h2ttevsctu6ll
+[9] m/0/39: bcrt1q5ysn94uztuwh7zxjkwy5ynwf8ee0vswp8mt42n396a3qc7rwq9vsuncjvc
+
+Controls:
+    'NEXT' -- view next 10 addresses
+    'PREV' -- view previous 10 addresses
+    'CHANGE' -- toggle to/from change addresses
+    '0' -- save the address at index [0] as a QR code in address.png
+    '1' -- save the address at index [1] as a QR code in address.png
+    '2' -- save the address at index [2] as a QR code in address.png
+    '3' -- save the address at index [3] as a QR code in address.png
+    '4' -- save the address at index [4] as a QR code in address.png
+    '5' -- save the address at index [5] as a QR code in address.png
+    '6' -- save the address at index [6] as a QR code in address.png
+    '7' -- save the address at index [7] as a QR code in address.png
+    '8' -- save the address at index [8] as a QR code in address.png
+    '9' -- save the address at index [9] as a QR code in address.png
+    'EXIT' -- exit
+
+Enter your desired command: ================================================================================
+Derivation Path, Address
+[0] m/0/20: bcrt1qhff3san22kv3sqzexk7adjswasyuyugkasxx6qpatdlnlqu99jasc9mgu8
+[1] m/0/21: bcrt1q2deqd22ddytqv3a5tm0pl3fr45vpeg046v06dty50k4przlpswtskre8qd
+[2] m/0/22: bcrt1qz7esr7fqkg3ez3kya4ac00x9x5x5chyn3qjr6af2s2alm605ym5sj3nagx
+[3] m/0/23: bcrt1qucvuk8256h7ny7mqqhpprknvx4mfasgpgx36jexjnwnalwnf0qeqal6ja5
+[4] m/0/24: bcrt1qvujxxh4xgqt4qc9fgqnrd40s4wr40egjy2q7cskszm8xrw0e045scd0f46
+[5] m/0/25: bcrt1q0epy6zdgy85tkquqfquyl36dsddyq4cwmskzfarhdgr6usvennkqzku2zt
+[6] m/0/26: bcrt1q87l3ec08zyv7l8xgt422w85syt8ckv0qlc7suv30fnprw90dvm7s2tyzaz
+[7] m/0/27: bcrt1qwslx4wng7smlqr7h0wp9lq683zd8x7ryu99p33qtuf3xl483d5nsc3wq8d
+[8] m/0/28: bcrt1qmrf4rxud09vsy3p8hgvmd77rs7s9y9lc43chr7aep00sha0ffp7qy5rrqe
+[9] m/0/29: bcrt1qnj66r9ey2u0g96k2uel5p9tnmjcz4664dd0ag298u9ljvg9t3p5qnfs7pz
+
+Controls:
+    'NEXT' -- view next 10 addresses
+    'PREV' -- view previous 10 addresses
+    'CHANGE' -- toggle to/from change addresses
+    '0' -- save the address at index [0] as a QR code in address.png
+    '1' -- save the address at index [1] as a QR code in address.png
+    '2' -- save the address at index [2] as a QR code in address.png
+    '3' -- save the address at index [3] as a QR code in address.png
+    '4' -- save the address at index [4] as a QR code in address.png
+    '5' -- save the address at index [5] as a QR code in address.png
+    '6' -- save the address at index [6] as a QR code in address.png
+    '7' -- save the address at index [7] as a QR code in address.png
+    '8' -- save the address at index [8] as a QR code in address.png
+    '9' -- save the address at index [9] as a QR code in address.png
+    'EXIT' -- exit
+
+Enter your desired command: ================================================================================
+Derivation Path, Address
+[0] m/0/10: bcrt1qzqlyh9uvxvh99lr258m5h2p8n8aasldyzlfhh29rztl3zsd5n66svydwza
+[1] m/0/11: bcrt1qyqrqmj8u0w5wf7qdcpc6m052cmgz8katpad76u3hr8v6xqvhn3sq070dgx
+[2] m/0/12: bcrt1qff0h4r668lh8m7w6k456lv29sx4q98aq3u0nxdx5wr4kqszfcz5s3wv5uc
+[3] m/0/13: bcrt1qujxuvhz8jwws6nu8fxazu2y7rdep4u06czrvrs2njsxf327cxdrs6mwz8c
+[4] m/0/14: bcrt1qzvwrtaaqlfjrtcl0vz2h8uw0dkcrma0msqt7d5schwvyajctq8rqk6rq0e
+[5] m/0/15: bcrt1qscvvslmrruajjlznwt0pt80xpqvkq9nmhgy6hwrm3g2mp4nftefsknk459
+[6] m/0/16: bcrt1quyeg4y3g793sjpvpnl8np26x5kqfdj83v32nkj7uaz82kulnampqkptlvg
+[7] m/0/17: bcrt1qdt56ce0yrw9upqzxfjdvqxzrs68fhqglxn2t9sxuejem0usl4zvsx72e4n
+[8] m/0/18: bcrt1qzcjc0vvh3cxfkpz93da0tacuu4ys6kq80844ffrce6k630r3t7wqes2hrt
+[9] m/0/19: bcrt1q2lurl3gxklare9q2gxkg8kyvmkcvsga40lvs3mhq55cwczyreevsrcv788
+
+Controls:
+    'NEXT' -- view next 10 addresses
+    'PREV' -- view previous 10 addresses
+    'CHANGE' -- toggle to/from change addresses
+    '0' -- save the address at index [0] as a QR code in address.png
+    '1' -- save the address at index [1] as a QR code in address.png
+    '2' -- save the address at index [2] as a QR code in address.png
+    '3' -- save the address at index [3] as a QR code in address.png
+    '4' -- save the address at index [4] as a QR code in address.png
+    '5' -- save the address at index [5] as a QR code in address.png
+    '6' -- save the address at index [6] as a QR code in address.png
+    '7' -- save the address at index [7] as a QR code in address.png
+    '8' -- save the address at index [8] as a QR code in address.png
+    '9' -- save the address at index [9] as a QR code in address.png
+    'EXIT' -- exit
+
+Enter your desired command: ================================================================================
+Derivation Path, Address
+[0] m/0/0: bcrt1qumkqe0wvulrdq5me898ad9jg7srrulafv7z7dc66n2mq4aavh4yqk2559z
+[1] m/0/1: bcrt1qz8kklfw96letuaklg9vtu8wekw3e9cpwd2shx6tvlwfr72us6e0ssyl0lj
+[2] m/0/2: bcrt1qrpdpk2l4znph4vcte99tt7wnq6phkhnw9ss4m0cu8paulj2n7jmqn3c240
+[3] m/0/3: bcrt1q8kvzd6feufreg48fcj6m7uqtad4x2k5uwv78ardjxrgm5fkdg9ns5hzlsz
+[4] m/0/4: bcrt1qdm6uwfg4292g4ppvrel0kvfc08qaq8z4p53m08tlue9qqhx40zks3cnzk2
+[5] m/0/5: bcrt1q4el5hkh544p4l9lef2unn0vwz9lmvwfwt8enw2jpk86sdz5fk76sf4p5nl
+[6] m/0/6: bcrt1q0xy0ayn4ntc9he62dv56z5v6z2zt2mw3p4s8r68g8pjnzxyrc49s7rlghf
+[7] m/0/7: bcrt1qat7w0d86yp02vtmec6xkv3anerhfna3a0gh6uqasgp9haw4wguhsfrzuqg
+[8] m/0/8: bcrt1q5x8mgfh2jl77845u26gcxmujxh0v6xlr98932kuf36mkt2w2ff0qtapxll
+[9] m/0/9: bcrt1qx3g9gkay9ml6ed84nzcr8zwhpgj7c36pvqe0jzh4llj8vcqs4tusp6rdq7
+
+Controls:
+    'NEXT' -- view next 10 addresses
+    'PREV' -- view previous 10 addresses
+    'CHANGE' -- toggle to/from change addresses
+    '0' -- save the address at index [0] as a QR code in address.png
+    '1' -- save the address at index [1] as a QR code in address.png
+    '2' -- save the address at index [2] as a QR code in address.png
+    '3' -- save the address at index [3] as a QR code in address.png
+    '4' -- save the address at index [4] as a QR code in address.png
+    '5' -- save the address at index [5] as a QR code in address.png
+    '6' -- save the address at index [6] as a QR code in address.png
+    '7' -- save the address at index [7] as a QR code in address.png
+    '8' -- save the address at index [8] as a QR code in address.png
+    '9' -- save the address at index [9] as a QR code in address.png
+    'EXIT' -- exit
+
+Enter your desired command: Unsupported option.
+================================================================================
+Derivation Path, Address
+[0] m/0/0: bcrt1qumkqe0wvulrdq5me898ad9jg7srrulafv7z7dc66n2mq4aavh4yqk2559z
+[1] m/0/1: bcrt1qz8kklfw96letuaklg9vtu8wekw3e9cpwd2shx6tvlwfr72us6e0ssyl0lj
+[2] m/0/2: bcrt1qrpdpk2l4znph4vcte99tt7wnq6phkhnw9ss4m0cu8paulj2n7jmqn3c240
+[3] m/0/3: bcrt1q8kvzd6feufreg48fcj6m7uqtad4x2k5uwv78ardjxrgm5fkdg9ns5hzlsz
+[4] m/0/4: bcrt1qdm6uwfg4292g4ppvrel0kvfc08qaq8z4p53m08tlue9qqhx40zks3cnzk2
+[5] m/0/5: bcrt1q4el5hkh544p4l9lef2unn0vwz9lmvwfwt8enw2jpk86sdz5fk76sf4p5nl
+[6] m/0/6: bcrt1q0xy0ayn4ntc9he62dv56z5v6z2zt2mw3p4s8r68g8pjnzxyrc49s7rlghf
+[7] m/0/7: bcrt1qat7w0d86yp02vtmec6xkv3anerhfna3a0gh6uqasgp9haw4wguhsfrzuqg
+[8] m/0/8: bcrt1q5x8mgfh2jl77845u26gcxmujxh0v6xlr98932kuf36mkt2w2ff0qtapxll
+[9] m/0/9: bcrt1qx3g9gkay9ml6ed84nzcr8zwhpgj7c36pvqe0jzh4llj8vcqs4tusp6rdq7
+
+Controls:
+    'NEXT' -- view next 10 addresses
+    'PREV' -- view previous 10 addresses
+    'CHANGE' -- toggle to/from change addresses
+    '0' -- save the address at index [0] as a QR code in address.png
+    '1' -- save the address at index [1] as a QR code in address.png
+    '2' -- save the address at index [2] as a QR code in address.png
+    '3' -- save the address at index [3] as a QR code in address.png
+    '4' -- save the address at index [4] as a QR code in address.png
+    '5' -- save the address at index [5] as a QR code in address.png
+    '6' -- save the address at index [6] as a QR code in address.png
+    '7' -- save the address at index [7] as a QR code in address.png
+    '8' -- save the address at index [8] as a QR code in address.png
+    '9' -- save the address at index [9] as a QR code in address.png
+    'EXIT' -- exit
+
+Enter your desired command: ================================================================================
+Derivation Path, Address
+[0] m/1/0: bcrt1qumkqe0wvulrdq5me898ad9jg7srrulafv7z7dc66n2mq4aavh4yqk2559z
+[1] m/1/1: bcrt1qz8kklfw96letuaklg9vtu8wekw3e9cpwd2shx6tvlwfr72us6e0ssyl0lj
+[2] m/1/2: bcrt1qrpdpk2l4znph4vcte99tt7wnq6phkhnw9ss4m0cu8paulj2n7jmqn3c240
+[3] m/1/3: bcrt1q8kvzd6feufreg48fcj6m7uqtad4x2k5uwv78ardjxrgm5fkdg9ns5hzlsz
+[4] m/1/4: bcrt1qdm6uwfg4292g4ppvrel0kvfc08qaq8z4p53m08tlue9qqhx40zks3cnzk2
+[5] m/1/5: bcrt1q4el5hkh544p4l9lef2unn0vwz9lmvwfwt8enw2jpk86sdz5fk76sf4p5nl
+[6] m/1/6: bcrt1q0xy0ayn4ntc9he62dv56z5v6z2zt2mw3p4s8r68g8pjnzxyrc49s7rlghf
+[7] m/1/7: bcrt1qat7w0d86yp02vtmec6xkv3anerhfna3a0gh6uqasgp9haw4wguhsfrzuqg
+[8] m/1/8: bcrt1q5x8mgfh2jl77845u26gcxmujxh0v6xlr98932kuf36mkt2w2ff0qtapxll
+[9] m/1/9: bcrt1qx3g9gkay9ml6ed84nzcr8zwhpgj7c36pvqe0jzh4llj8vcqs4tusp6rdq7
+
+Controls:
+    'NEXT' -- view next 10 addresses
+    'PREV' -- view previous 10 addresses
+    'CHANGE' -- toggle to/from change addresses
+    '0' -- save the address at index [0] as a QR code in address.png
+    '1' -- save the address at index [1] as a QR code in address.png
+    '2' -- save the address at index [2] as a QR code in address.png
+    '3' -- save the address at index [3] as a QR code in address.png
+    '4' -- save the address at index [4] as a QR code in address.png
+    '5' -- save the address at index [5] as a QR code in address.png
+    '6' -- save the address at index [6] as a QR code in address.png
+    '7' -- save the address at index [7] as a QR code in address.png
+    '8' -- save the address at index [8] as a QR code in address.png
+    '9' -- save the address at index [9] as a QR code in address.png
+    'EXIT' -- exit
+
+Enter your desired command: 
