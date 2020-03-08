@@ -394,11 +394,11 @@ def get_mnemonic_interactive():
     words = raw_mnemonic.split()
     mnemonic = " ".join(words)
     if len(words) != 24:
-        print("Mnemonic phrase must be exactly 24 words long. Exiting.")
-        sys.exit()
+        print("Error: Mnemonic phrase must be exactly 24 words long. Exiting.")
+        sys.exit(1)
     if M.check(mnemonic) != True:
-        print("The inputted mnemonic phrase is invalid. Exiting.")
-        sys.exit()
+        print("Error: The mnemonic phrase is invalid. Exiting.")
+        sys.exit(1)
     seed = M.to_seed(mnemonic)
     return M.to_hd_master_key(seed, network)
 

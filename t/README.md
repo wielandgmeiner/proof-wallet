@@ -54,6 +54,8 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | Test case                 | Coverage goal |
 | --------------------------|  ------------- |
 | `view-addresses.run`        | Basic flow; use all available commands to explore addresses|
+| `view-addresses.mnemonic-too-short.run`        | Fail when mnemonic isn't 24 words long |
+| `view-addresses.mnemonic-invalid.run`        | Fail when mnemonic is invalid |
 
 ## Tests for withdrawls (`sign-psbt`)
 
