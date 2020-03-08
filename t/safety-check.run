@@ -1,0 +1,13 @@
+#!/bin/bash
+
+../../glacierscript.py create-wallet --regtest << INPUT 2>&1
+y
+y
+n
+INPUT
+
+retVal=$?
+if [ $retVal -eq 0 ]; then
+    echo "Error: expected glacierscript.py to fail"
+    exit 1
+fi

@@ -1,0 +1,36 @@
+Are you running this on a computer WITHOUT a network connection of any kind? (y/n)?Have the wireless cards in this computer been physically removed? (y/n)?Are you running on battery power? (y/n)?Are you running on an operating system booted from a USB drive? (y/n)?Is your screen hidden from view of windows, cameras, and other people? (y/n)?Are smartphones and all other nearby devices turned off and in a Faraday bag? (y/n)?
+Creating cold storage private key data.
+
+Enter 100 dice rolls (example: 62543 16325 21341...) Spaces are OK, and will be ignored:
+Enter at least 64 characters of computer entropy. Spaces are OK, and will be ignored:
+
+BIP39 Mnemonic Phrase: 
+1. mouse
+2. scout
+3. chest
+4. give
+5. trim
+6. veteran
+7. keen
+8. arrive
+9. test
+10. advice
+11. warrior
+12. reduce
+13. silent
+14. useful
+15. oak
+16. embrace
+17. drift
+18. curve
+19. large
+20. poet
+21. embody
+22. theme
+23. focus
+24. wolf
+
+xpub:
+tpubD6NzVbkrYhZ4YTjZqdGdMpqtd7BFKkERJcK3hjQx4gtHC3xowC5EKAsHY5tgx1coSC6sbw6X7Ngc1AFrVEzgwFFAF8pbsU5n28yYiZrxTAg
+
+QR code for xpub written to xpub.png

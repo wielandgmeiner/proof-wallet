@@ -832,8 +832,8 @@ def safety_checklist():
     for check in checks:
         answer = input(check + " (y/n)?")
         if answer.upper() != "Y":
-            print("\n Safety check failed. Exiting.")
-            sys.exit()
+            print("\nError: Safety check failed. Exiting.")
+            sys.exit(1)
 
 
 ################################################################################################
