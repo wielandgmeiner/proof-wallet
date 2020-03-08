@@ -375,14 +375,10 @@ def is_valid_xpub(xpub):
         descriptor = "pk({})".format(xpub)
         # validate that the input string is an xpub
         bitcoin_cli_checkoutput("getdescriptorinfo", descriptor)
-        # validate the version bits for the global network
-        if network == "mainnet" and xpub[:4] != "xpub" or xpub[:4] != "tpub":
-            print("The provided xpub is not valid for {}. Exiting.".format(network))
-            sys.exit()
         return True
     except subprocess.CalledProcessError:
-        print("The provided xpub is invalid. Exiting.")
-        sys.exit()
+        print("Error: The provided xpub is invalid. Exiting.")
+    sys.exit(1)
 
 def get_mnemonic_interactive():
     """
@@ -420,7 +416,7 @@ def get_xpubs_interactive(n):
     unique_xpubs = set(xpubs)
     if len(unique_xpubs) != n:
         print("Expected {} unique xpubs, but found {}. Exiting".format(n, len(unique_xpubs)))
-        sys.exit()
+        sys.exit(1)
 
     return xpubs
 
