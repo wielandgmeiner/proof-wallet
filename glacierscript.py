@@ -939,7 +939,7 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
         xpubs = get_xpubs_interactive(n)
 
         if my_xpub not in xpubs:
-            print("Error: None of the provided xpubs match the provided mnemonic phrase. Exiting.")
+            print("Error: No xpubs match the xpub of the provided mnemonic phrase. Exiting.")
             sys.exit(1)
         xkeys = [xpub if xpub != my_xpub else my_xprv for xpub in xpubs]
 

@@ -60,6 +60,7 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | `view-addresses.xpub-invalid-for-network.run`        | Fail when a cosigner xpub is invalid for the specified network |
 | `view-addresses.xpub-invalid.run`        | Fail when a cosigner xpub is invalid |
 | `view-addresses.duplicate-xpubs.run`        | Fail when the user enters duplicate xpubs |
+| `view-addresses.no-matching-xpub.run`        | Fail when no xpub matches the mnemonic's xpub |
 
 ## Tests for withdrawls (`sign-psbt`)
 
