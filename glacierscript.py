@@ -917,26 +917,31 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
 #
 ################################################################################################
 
-def view_addresses_interactive(m, n):
+def view_addresses_interactive(m, n, trust_xpubs = False):
     """
     Show the addresses for a multisignature wallet with the user-provided policy
     m: <int> number of multisig keys required for withdrawal
     n: <int> total number of multisig keys
+    trust_xpubs: <boolean> only use xpubs to generate addresses
     """
 
     safety_checklist()
     ensure_bitcoind_running()
     require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
 
-    # prompt user for mnemonic and all xpubs in the multisignature quorum
-    my_xprv = get_mnemonic_interactive()
-    my_xpub = get_xpub_from_xkey(my_xprv)
-    xpubs = get_xpubs_interactive(n)
+    if trust_xpubs:
+        # only prompt user for xpubs
+        xkeys = get_xpubs_interactive(n)
+    else:
+        # prompt user for mnemonic and all xpubs in the multisignature quorum
+        my_xprv = get_mnemonic_interactive()
+        my_xpub = get_xpub_from_xkey(my_xprv)
+        xpubs = get_xpubs_interactive(n)
 
-    if my_xpub not in xpubs:
-        print("None of the provided xpubs match the provided mnemonic phrase. Exiting.")
-        sys.exit()
-    xkeys = [xpub if xpub != my_xpub else my_xprv for xpub in xpubs]
+        if my_xpub not in xpubs:
+            print("Error: None of the provided xpubs match the provided mnemonic phrase. Exiting.")
+            sys.exit(1)
+        xkeys = [xpub if xpub != my_xpub else my_xprv for xpub in xpubs]
 
     start = 0
     N = 10 # number of addresses to display at one time
@@ -1002,8 +1007,8 @@ def sign_psbt_interactive(m, n):
     xpubs = get_xpubs_interactive(n)
 
     if my_xpub not in xpubs:
-        print("None of the provided xpubs match the provided mnemonic phrase. Exiting.")
-        sys.exit()
+        print("Error: None of the provided xpubs match the provided mnemonic phrase. Exiting.")
+        sys.exit(1)
     xkeys = [xpub if xpub != my_xpub else my_xprv for xpub in xpubs]
 
     # prompt user for base64 psbt string
@@ -1166,6 +1171,7 @@ if __name__ == "__main__":
     add_m(parser_view_addresses)
     add_n(parser_view_addresses)
     add_networks(parser_view_addresses)
+    parser_view_addresses.add_argument("--trust-xpubs", action="store_true", help="Only prompts user for xpubs")
 
     # Sign psbt parser
     parser_sign_psbt = subs.add_parser('sign-psbt', help="Sign a PSBT")
@@ -1192,7 +1198,7 @@ if __name__ == "__main__":
         create_wallet_interactive(args.dice, args.rng)
 
     if args.program == "view-addresses":
-        view_addresses_interactive(args.m, args.n)
+        view_addresses_interactive(args.m, args.n, args.trust_xpubs)
 
     if args.program == "sign-psbt":
         sign_psbt_interactive(args.m, args.n)
