@@ -67,6 +67,7 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | Test case                 | Coverage goal |
 | --------------------------| ------------- |
 | `sign-psbt.run`        | Basic flow; sign a psbt with 1 change address |
+| `sign-psbt.no-matching-xpub.run`        | Fail when no xpub matches the mnemonic's xpub |
 
 ## Tests for other miscellaneous
 
