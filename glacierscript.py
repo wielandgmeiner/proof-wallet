@@ -646,7 +646,8 @@ def validate_psbt(psbt_raw, xkeys, m):
 
             # Ensure the scriptpubkey only contains 1 address (is this necessary?)
             if len(tx_out["scriptPubKey"]["addresses"]) != 1:
-                sys.exit("Tx output {} contains multiple addresses".format(i))
+                response["error"] = "Tx output {} contains multiple addresses".format(i)
+                return response
             [actual_address] = tx_out["scriptPubKey"]["addresses"]
 
             # Ensure each public key comes from the same derivation path and this derivation path
@@ -683,7 +684,7 @@ def validate_psbt(psbt_raw, xkeys, m):
                 response["error"] = "Tx output {} has an unexpected scriptPubKey".format(i)
                 return response
             if scriptPubKeyParts[0] != "0":
-                response["error"] = "Tx input {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0])
+                response["error"] = "Tx output {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0])
                 return response
             if witness_script_hash != scriptPubKeyParts[1]:
                 response["error"] = "The hash of the witness script for Tx output {} does not match the provided witness script".format(i)
@@ -1018,7 +1019,7 @@ def sign_psbt_interactive(m, n):
     psbt_validation = validate_psbt(psbt_raw, xkeys, m)
     if psbt_validation["error"] is not None:
         print("Error: {}".format(psbt_validation["error"]))
-        sys.exit()
+        sys.exit(1)
 
     psbt = psbt_validation["psbt"]
     analysis = psbt_validation["analysis"]
