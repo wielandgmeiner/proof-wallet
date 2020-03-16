@@ -534,14 +534,6 @@ def validate_psbt(psbt_raw, xkeys, m):
 
         fps = set(map(lambda xkey: get_fingerprint_from_xkey(xkey), xkeys))
 
-        # GENERAL VALIDATIONS
-        if len(psbt["inputs"]) < 1:
-            response["error"] = "PSBT 'inputs' array is empty"
-            return response
-        if len(psbt["outputs"]) < 1:
-            response["error"] = "PSBT 'outputs' array is empty"
-            return response
-
         # INPUTS VALIDATIONS
         for i, _input in enumerate(psbt["inputs"]):
             # Ensure input spends a witness UTXO
