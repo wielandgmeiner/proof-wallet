@@ -556,7 +556,7 @@ def validate_psbt(psbt_raw, xkeys, m):
             # Ensure the witness utxo is the expected type: witness_v0_scripthash
             scriptpubkey_type = _input["witness_utxo"]["scriptPubKey"]["type"]
             if scriptpubkey_type != "witness_v0_scripthash":
-                response["error"] = "Tx input {} contains an incorrect scriptPubKey type: {}.".format(i, scriptpubkey_type)
+                response["error"] = "Tx input {} contains an incorrect scriptPubKey type.".format(i)
                 return response
 
             # Ensure input contains a witness script

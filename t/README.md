@@ -68,6 +68,10 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | --------------------------| ------------- |
 | `sign-psbt.run`        | Basic flow; sign a psbt with 1 change address |
 | `sign-psbt.no-matching-xpub.run`        | Fail when no xpub matches the mnemonic's xpub |
+| `sign-psbt.non-witness-input.run`        | Fail when the Tx contains a non-witness input |
+| `sign-psbt.no-bip32-input-meta.run`        | Fail when an input doesn't have bip32 metadata |
+| `sign-psbt.wrong-bip32-input-meta-fps.run`        | Fail when an input'S bip32 metadata fingerprints don't match ours |
+| `sign-psbt.wrong-input-scriptPubKey-type.run`        | Fail when an input's scriptPubKey type isn't correct |
 
 ## Tests for other miscellaneous
 
