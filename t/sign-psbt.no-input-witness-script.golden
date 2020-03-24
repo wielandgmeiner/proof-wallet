@@ -1,0 +1,9 @@
+Are you running this on a computer WITHOUT a network connection of any kind? (y/n)?Have the wireless cards in this computer been physically removed? (y/n)?Are you running on battery power? (y/n)?Are you running on an operating system booted from a USB drive? (y/n)?Is your screen hidden from view of windows, cameras, and other people? (y/n)?Are smartphones and all other nearby devices turned off and in a Faraday bag? (y/n)?
+Enter the 24 word mnemonic phrase (separate the words with whitespace): 
+Input 2 valid xpubs
+
+Enter xpub #1: 
+Enter xpub #2: 
+Enter the psbt for the transaction you wish to sign: 
+Validating the PSBT...
+Error: Tx input 0 doesn't contain a witness script

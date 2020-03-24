@@ -72,6 +72,11 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | `sign-psbt.no-bip32-input-meta.run`        | Fail when an input doesn't have bip32 metadata |
 | `sign-psbt.wrong-bip32-input-meta-fps.run`        | Fail when an input'S bip32 metadata fingerprints don't match ours |
 | `sign-psbt.wrong-input-scriptPubKey-type.run`        | Fail when an input's scriptPubKey type isn't correct |
+| `sign-psbt.no-input-witness-script.run`        | Fail when an input doesn't contain a witness script |
+| `sign-psbt.input-witness-script-hash-no-match.run`        | Fail when the hash of an input's witness script doesn't match the witness_utxo's scriptPubKey |
+| `sign-psbt.input-different-bip32-paths.run`        | Fail when there are multiple bip32 derivation paths for one input |
+| `sign-psbt.input-unexpected-derived-address.run`        | Fail when the input addressed derived from the bip32 paths doesn't match the witness_utxo's scriptPubKey |
+
 
 ## Tests for other miscellaneous
 

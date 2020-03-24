@@ -601,7 +601,7 @@ def validate_psbt(psbt_raw, xkeys, m):
             # Ensure expected address implied by metadata matches actual address supplied
             [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
             if expected_address != actual_address:
-                response["error"] = "Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(idx)
+                response["error"] = "Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(i)
                 return response
 
             # Ensure sighash is not set at all or set correctly
