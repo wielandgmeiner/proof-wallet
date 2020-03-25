@@ -606,7 +606,7 @@ def validate_psbt(psbt_raw, xkeys, m):
 
             # Ensure sighash is not set at all or set correctly
             if "sighash" in _input and _input["sighash"] != "ALL":
-                response["error"] = "Tx input {} specifies an unsupported sighash, '{}'".format(i, _input["sighash"])
+                response["error"] = "Tx input {} specifies an unsupported sighash type: {}".format(i, _input["sighash"])
                 return response
 
             # Update impormulti_idxs

@@ -75,8 +75,9 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | `sign-psbt.no-input-witness-script.run`        | Fail when an input doesn't contain a witness script |
 | `sign-psbt.input-witness-script-hash-no-match.run`        | Fail when the hash of an input's witness script doesn't match the witness_utxo's scriptPubKey |
 | `sign-psbt.input-different-bip32-paths.run`        | Fail when there are multiple bip32 derivation paths for one input |
+| `sign-psbt.input-unsupported-bip32-path.run`        | Fail when an input's bip32 path is not supported  |
 | `sign-psbt.input-unexpected-derived-address.run`        | Fail when the input addressed derived from the bip32 paths doesn't match the witness_utxo's scriptPubKey |
-
+| `sign-psbt.input-unsupported-sighash.run`        | Fail when an input specifies a sighash type that is not 'ALL' |
 
 ## Tests for other miscellaneous
 
