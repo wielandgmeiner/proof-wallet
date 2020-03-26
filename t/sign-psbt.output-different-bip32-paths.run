@@ -1,0 +1,20 @@
+#!/bin/bash
+
+../../glacierscript.py sign-psbt -m 2 -n 2 --regtest << INPUT 2>&1
+y
+y
+y
+y
+y
+y
+mouse scout chest give trim veteran keen arrive test advice warrior reduce silent useful oak embrace drift curve large poet embody theme focus wolf
+tpubD6NzVbkrYhZ4YTjZqdGdMpqtd7BFKkERJcK3hjQx4gtHC3xowC5EKAsHY5tgx1coSC6sbw6X7Ngc1AFrVEzgwFFAF8pbsU5n28yYiZrxTAg
+tpubD6NzVbkrYhZ4XcWFWZiEr9DBG7eFbG5H6Lz4TwmMw9FwhaRT7Yj5LyPFFBp7jok8uaPKWYsQtHEK2e1N231CmVt2QfMsjCn46by1NbrFEq9
+cHNidP8BAIACAAAAAURrW7a/0IjQJW4qN6xld6NLFTSoGe+WA2VzxApER5svAAAAAAD9////AnzPAwAAAAAAIgAg0oDDltDjDejjGuz/2oGhg0ErfFOuzUJ7fnjQKNgLVGqwcQsAAAAAABl2qRQ0Sg9IyhUOwrkDgXZgubaLE6ZwJoisWXcZAAABAStAQg8AAAAAACIAIObsDL3M58bQU3k5T9aWSPQGPn+pZ4Xm41qatgr3rL1IAQVHUiECAi9g1wJg9FyhlZTAdxINPYA106IBvhSdmmvq3d4D954hA/RVGRXGGIAvve4NCiT2R/vc3fuXYuGTCmyAnsmNyjSAUq4iBgICL2DXAmD0XKGVlMB3Eg09gDXTogG+FJ2aa+rd3gP3ngw06TzaAAAAAAAAAAAiBgP0VRkVxhiAL73uDQok9kf73N37l2LhkwpsgJ7Jjco0gAwLiKk3AAAAAAAAAAAAAQFHUiECSKYtwdelr532sQKJOwY98txR4DZHcmJg/H2Vvcv3rxkhAqY4Im/FSOfANuRIZxq5hzxQ5WUHEzGmAf7IhpAp0JrUUq4iAgJIpi3B16WvnfaxAok7Bj3y3FHgNkdyYmD8fZW9y/evGQwLiKk3AQAAAAEAAAAiAgKmOCJvxUjnwDbkSGcauYc8UOVlBxMxpgH+yIaQKdCa1Aw06TzaAQAAAAAAAAAAAA==
+INPUT
+
+retVal=$?
+if [ $retVal -eq 0 ]; then
+    echo "Error: expected glacierscript.py to fail"
+    exit 1
+fi

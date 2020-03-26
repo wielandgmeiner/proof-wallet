@@ -676,7 +676,7 @@ def validate_psbt(psbt_raw, xkeys, m):
                 response["error"] = "Tx output {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0])
                 return response
             if witness_script_hash != scriptPubKeyParts[1]:
-                response["error"] = "The hash of the witness script for Tx output {} does not match the provided witness script".format(i)
+                response["error"] = "The hash of the witness script for Tx output {} does not match the Tx output's scriptPubKey".format(i)
                 return response
 
             # Allow a user to spend change to an external address, but display a warning
