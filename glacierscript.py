@@ -636,10 +636,7 @@ def validate_psbt(psbt_raw, xkeys, m):
             if fps != output_fps:
                 continue
 
-            # Ensure the scriptpubkey only contains 1 address (is this necessary?)
-            if len(tx_out["scriptPubKey"]["addresses"]) != 1:
-                response["error"] = "Tx output {} contains multiple addresses".format(i)
-                return response
+            # Get the actual Tx address from the scriptPubKey
             [actual_address] = tx_out["scriptPubKey"]["addresses"]
 
             # Ensure each public key comes from the same derivation path and this derivation path
