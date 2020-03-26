@@ -681,7 +681,9 @@ def validate_psbt(psbt_raw, xkeys, m):
 
             # Allow a user to spend change to an external address, but display a warning
             if change == 0:
-                response["warning"].append("Tx output {} spends change to an external receive address".format(i))
+                warning = "Tx output {} spends change to an external receive address. If this is the "
+                warning += "intended behavior, you can safely ignore this warning."
+                response["warning"].append(warning.format(i))
 
             response["change_idxs"].append(i) # change validations pass
 
@@ -1106,7 +1108,8 @@ def sign_psbt_interactive(m, n):
             write_and_verify_qr_code("signed psbt", "psbt-signed.png", psbt_signed["psbt"])
             sys.exit()
         elif cmd == "EXIT":
-            sys.exit("Exiting...")
+            print("Exiting...")
+            sys.exit(0)
         else:
             print("Unsupported option.\n")
 

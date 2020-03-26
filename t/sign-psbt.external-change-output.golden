@@ -1,0 +1,40 @@
+Are you running this on a computer WITHOUT a network connection of any kind? (y/n)?Have the wireless cards in this computer been physically removed? (y/n)?Are you running on battery power? (y/n)?Are you running on an operating system booted from a USB drive? (y/n)?Is your screen hidden from view of windows, cameras, and other people? (y/n)?Are smartphones and all other nearby devices turned off and in a Faraday bag? (y/n)?
+Enter the 24 word mnemonic phrase (separate the words with whitespace): 
+Input 2 valid xpubs
+
+Enter xpub #1: 
+Enter xpub #2: 
+Enter the psbt for the transaction you wish to sign: 
+Validating the PSBT...
+================================================================================
+PSBT validation SUCCESSFUL:
+* The provided base64 encoded input is a valid PSBT.
+* All input validations succeeded.
+* All output validations succeeded.
+
+PSBT validation WARNINGS:
+* Tx output 0 spends change to an external receive address. If this is the intended behavior, you can safely ignore this warning.
+
++-----------------------+
+|                       |
+|  Transaction Summary  |
+|                       |
++-----------------------+
+Transaction ID: 98c44e81c09c8bae33e52f017b005e76f1f48f18dc2fbed60c5b0f3278524e8e
+Virtual size: 224 vbyte
+Fee (total): 0.00000338
+Fee (rate): 1.5 sat/byte
+
+Inputs (1)
+2f9b47440a...bfb65b6b44:0	bcrt1qumkqe0wvulrdq5me898ad9jg7srrulafv7z7dc66n2mq4aavh4yqk2559z	0.01000000
+
+Outputs (3)
+[CHANGE] bcrt1qz8kklfw96letuaklg9vtu8wekw3e9cpwd2shx6tvlwfr72us6e0ssyl0lj	0.00100000
+[CHANGE] bcrt1q62qv89ksuvx73cc6anla4qdpsdqjklzn4mx5y7m70rgz3kqt234ql0nnac	0.00149662
+[NOT CHANGE] 2NGZrVvZG92qGYqzTLjCAewvPZ7JE8S8VxE	0.00750000
+
+Controls:
+    'SIGN' -- sign the psbt
+    'EXIT' -- exit
+
+Enter your desired command: Exiting...

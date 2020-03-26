@@ -83,7 +83,8 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | `sign-psbt.output-unexpected-derived-address.run`        | Fail when a change output address derived from the bip32 paths doesn't match the Tx vout scriptPubKey |
 | `sign-psbt.output-no-witness-script.run`        | Fail when a change output doesn't contain a witness script |
 | `sign-psbt.output-witness-script-hash-no-match.run`        | Fail when the hash of a change output's witness script doesn't match the Tx output's scriptPubKey |
-
+| `sign-psbt.external-change-output.run`        | Display a warning when a psbt spends bitcoins to an external wallet address as change |
+| `sign-psbt.no-change-outputs.run`        | Display a warning when there are no identifiable change outputs in the psbt |
 
 ## Tests for other miscellaneous
 
