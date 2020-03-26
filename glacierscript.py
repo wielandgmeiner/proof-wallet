@@ -568,15 +568,6 @@ def validate_psbt(psbt_raw, xkeys, m):
             witness_script = _input["witness_script"]["hex"]
             witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
             scriptPubKeyParts = _input["witness_utxo"]["scriptPubKey"]["asm"].split(" ")
-
-            # Ensure the scriptPubKey is the expected format: "0 WITNESS_SCRIPT_HASH"
-            # Probably already validated in Bitcoin Core given the type but be extra cautious
-            if len(scriptPubKeyParts) != 2:
-                response["error"] = "Tx input {} has an unexpected scriptPubKey".format(i)
-                return response
-            if scriptPubKeyParts[0] != "0":
-                response["error"] = "Tx input {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0])
-                return response
             if witness_script_hash != scriptPubKeyParts[1]:
                 response["error"] = "The hash of the witness script for Tx input {} does not match the provided witness UTXO scriptPubKey".format(i)
                 return response
@@ -666,15 +657,6 @@ def validate_psbt(psbt_raw, xkeys, m):
             witness_script = output["witness_script"]["hex"]
             witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
             scriptPubKeyParts = tx_out["scriptPubKey"]["asm"].split(" ")
-
-            # Ensure the scriptPubKey is the expected format: "0 WITNESS_SCRIPT_HASH"
-            # Probably already validated in Bitcoin Core given the type but be extra cautious
-            if len(scriptPubKeyParts) != 2:
-                response["error"] = "Tx output {} has an unexpected scriptPubKey".format(i)
-                return response
-            if scriptPubKeyParts[0] != "0":
-                response["error"] = "Tx output {} has an unsupported scriptPubKey version: {}".format(i, scriptPubKeyParts[0])
-                return response
             if witness_script_hash != scriptPubKeyParts[1]:
                 response["error"] = "The hash of the witness script for Tx output {} does not match the Tx output's scriptPubKey".format(i)
                 return response
