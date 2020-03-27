@@ -1,26 +1,25 @@
 # Only for running tests. Nothing else to make.
 
-## Running tests:
-# $ make                              -- Runs all tests
-# $ make t/create-deposit-data.test   -- Runs a single test. Note there is no actual file by this name
-#
-## Writing tests:
-# Create a t/foo.run bash script; make sure it is chmod +x.
-# Create a matching t/foo.golden file; `touch t/foo.golden` is sufficient to start
-# Run the test using `make t/foo.test`; it will fail since it doesn't match golden
-# Manually check t/foo.out to ensure desired output
-# $ mv t/foo.{out,golden}
-# Ensure test passes now
-# Commit!
+# See t/README.md for testing instructions.
+
 
 SHELL := /bin/bash
 
 all-tests := $(sort $(addsuffix .test, $(basename $(wildcard t/*.run))))
 
-.PHONY : prereqs test all %.test
+.PHONY : prereqs test all %.test clean
 
 # Force parallel even when user was too lazy to type -j4
 MAKEFLAGS += --jobs=4
+
+# Run `make COVERAGE=1` to enable coverage.py coverage collection.
+# Only works when running all tests.
+ifdef COVERAGE
+coverfile = $(addsuffix .cov, $(notdir $(basename $<)))
+export GLACIERSCRIPT=env COVERAGE_FILE=../../coverage/$(coverfile) coverage run ../../glacierscript.py
+else
+export GLACIERSCRIPT=../../glacierscript.py
+endif
 
 # I need a unique port number for each bitcoind launched. Start with
 # one higher than standard testnet port 18332, in case user already
@@ -40,30 +39,45 @@ $(foreach t,$(all-tests),$(eval $(call set_compteur, $(t))))
 # Simulate actual conditions on Quarantined Laptop...bitcoind will
 # normally not be running yet and ~/.bitcoin will not exist
 define cleanup_bitcoind =
-@mkdir -p $(RUNDIR)/bitcoin-test-data
-@bitcoin-cli -testnet -rpcport=$(compteur) -datadir=$(RUNDIR)/bitcoin-test-data stop >/dev/null 2>&1 || exit 0
+@mkdir -p $(BITCOIN_DATA_DIR)
+@bitcoin-cli -testnet -rpcport=$(compteur) -datadir=$(BITCOIN_DATA_DIR) stop >/dev/null 2>&1 || exit 0
 @if pgrep -f "^bitcoind -testnet -rpcport=$(compteur)" >/dev/null; then sleep 1; fi
 @if pgrep -f "^bitcoind -testnet -rpcport=$(compteur)" >/dev/null; then sleep 1; fi
 @if pgrep -f "^bitcoind -testnet -rpcport=$(compteur)" >/dev/null; then sleep 1; fi
 @if pgrep -f "^bitcoind -testnet -rpcport=$(compteur)" >/dev/null; then sleep 1; fi
 @if pgrep -f "^bitcoind -testnet -rpcport=$(compteur)" >/dev/null; then echo Error: unable to stop bitcoind on port $(compteur); exit 1; fi
 @sleep 1
-@rm -rf $(RUNDIR)/bitcoin-test-data
+@rm -rf $(BITCOIN_DATA_DIR)
 endef
 
 test : $(all-tests)
-	@rmdir testrun
+ifdef COVERAGE
+	@cd coverage && \
+	   coverage combine *.cov && \
+	   coverage html \
+	      --directory=../coverage-report \
+	      "--omit=**/base58.py"
+	@echo HTML coverage report generated in coverage-report/index.html
+	#@rm -rf coverage
+endif
+	$(MAKE) clean
 	@echo "Success, all tests passed."
+
+clean:
+	@rmdir testrun/bitcoin-data
+	@rmdir testrun
 
 OUTPUT = $(addsuffix .out, $(basename $<))
 RUNDIR = testrun/$(notdir $@)
-
+BITCOIN_DATA_DIR = testrun/bitcoin-data/$(compteur)
+# Used only within the %.test rule:
+GOLDEN_FILE = $(word 2, $?)
 
 define test_recipe =
 	$(cleanup_bitcoind)
-	@mkdir -p $(RUNDIR)/bitcoin-test-data
+	@mkdir -p $(BITCOIN_DATA_DIR) $(RUNDIR)
 	cd $(RUNDIR) && ../../$< $(compteur) 2>&1 > ../../$(OUTPUT)
-	@$(1) $(word 2, $?) $(OUTPUT) || \
+	@$(1) $(GOLDEN_FILE) $(OUTPUT) || \
 	  (echo "Test $@ failed" && exit 1)
 	$(cleanup_bitcoind)
 	@rm -rf $(RUNDIR)
@@ -81,3 +95,8 @@ prereqs:
 	@which bitcoind > /dev/null || (echo 'Error: unable to find bitcoind'; exit 1)
 	@which zbarimg > /dev/null || (echo 'Error: unable to find zbarimg (from package zbar-tools)'; exit 1)
 	@which qrencode > /dev/null || (echo 'Error: unable to find qrencode'; exit 1)
+ifdef COVERAGE
+	@which coverage > /dev/null || (echo 'Error: unable to find coverage (Maybe "pip3 install coverage"?)'; exit 1)
+	@rm -rf coverage
+	@mkdir -p coverage
+endif
