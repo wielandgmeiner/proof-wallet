@@ -1,6 +1,6 @@
 #!/bin/bash
 
-../../glacierscript.py create-wallet --regtest << INPUT 2>&1
+$GLACIERSCRIPT create-wallet --regtest << INPUT 2>&1
 y
 y
 n
