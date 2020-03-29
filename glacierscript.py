@@ -73,28 +73,6 @@ def hash160(string):
     intermed = sha256(string).digest()
     return hashlib_new('ripemd160', intermed).digest()
 
-def satoshi_to_btc(satoshi):
-    """
-    Converts a value in satoshi to a value in BTC
-    outputs => Decimal
-
-    satoshi: <int>
-    """
-    value = Decimal(satoshi) / Decimal(100000000)
-    return value.quantize(SATOSHI_PLACES)
-
-
-def btc_to_satoshi(btc):
-    """
-    Converts a value in BTC to satoshi
-    outputs => <int>
-
-    btc: <Decimal> or <Float>
-    """
-    value = btc * 100000000
-    return int(value)
-
-
 ################################################################################################
 #
 # Subprocess helper functions
@@ -773,21 +751,6 @@ def write_and_verify_qr_code(name, filename, data):
 # User sanity checking
 #
 ################################################################################################
-
-def yes_no_interactive():
-    def confirm_prompt():
-        return input("Confirm? (y/n): ")
-
-    confirm = confirm_prompt()
-
-    while True:
-        if confirm.upper() == "Y":
-            return True
-        if confirm.upper() == "N":
-            return False
-        else:
-            print("You must enter y (for yes) or n (for no).")
-            confirm = confirm_prompt()
 
 def safety_checklist():
 
