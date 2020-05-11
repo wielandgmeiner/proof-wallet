@@ -12,54 +12,61 @@ wsh(sortedmulti(M, [xfp_1]xpub_1/change/idx, [xfp_2]xpub_2/change/idx, ... , [xf
 That is, Proof Wallet consists of native segwit multisignature (M of N) outputs that adhere to BIP67 where the public keys derive from N xpubs with the same change (either 0 or 1) and index values.
 
 # Quickstart
-Proof Wallet is still experimental software. Those wishing to test it out must build Bitcoin Core from source to utilize the yet-unreleased `sortedmulti` descriptor function that Proof Wallet depends on; once Bitcoin Core v0.20 is realeased, users will be able to use the signed binaries available on bitcoin.org.
+Proof Wallet is still experimental software. The code relies on the `sortedmulti` descriptor, which will be supported starting with Bitcoin Core's v0.20 release; meanwhile, you can test by using the v0.20 release candidate 1 binary located [here](https://bitcoin.org/bin/bitcoin-core-0.20.0/test.rc1/).
 
 As Glacier Protocol is executed on an airgapped laptop running Ubuntu, this Quickstart assumes a fresh Ubuntu 18.04 install. You can test the wallet out by booting the distro off of a USB or using Virtual Machine software such as VirtualBox.
 
 ## Setup
 Run the following commands in Terminal to setup your environment.
 
-_Build Bitcoin Core from source_
+### Update Ubuntu
 ```
 sudo add-apt-repository universe
 sudo apt-get update
-
-# build requirements
-sudo apt-get install git build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 -y
-
-# dependencies
-sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev -y
-
-# download bitcoin
-cd /home/ubuntu
-git clone https://github.com/bitcoin/bitcoin.git
-cd /home/ubuntu/bitcoin
-
-# BerkeleyDB
-./contrib/install_db4.sh `pwd`
-
-# Build
-./autogen.sh
-export BDB_PREFIX='/home/ubuntu/bitcoin/db4'
-./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
-make
-
-# Add the generated binaries to the PATH
-sudo cp src/bitcoin-cli /usr/local/bin/
-sudo cp src/bitcoind /usr/local/bin/
 ```
 
-_Install QR code dependencies_
+### Install Bitcoin v0.20-rc1 source
+_Download bitcoin v0.20-rc1 source and signatures_
+```
+wget https://bitcoin.org/bin/bitcoin-core-0.20.0/test.rc1/bitcoin-0.20.0rc1-x86_64-linux-gnu.tar.gz
+wget https://bitcoin.org/bin/bitcoin-core-0.20.0/test.rc1/SHA256SUMS.asc
+```
+
+_Download Wladimir's public key and verify signatures_
+```
+wget https://bitcoin.org/laanwj-releases.asc
+gpg --import laanwj-releases.asc
+gpg --verify SHA256SUMS.asc
+```
+
+_Ensure you see the following..._
+```
+Good signature from "Wladimir J. van der Laan (Bitcoin
+Core binary release signing key) <laanwj@gmail.com>"
+
+Ignore this: WARNING: This key is not certified with a trusted
+signature! There is no indication that the signature belongs to the
+owner.
+
+Ensure primary key fingerprint is: 01EA 5486 DE18 A882 D4C2  6845 90C8 019E 36C2 E964
+```
+
+_Extract the binaries and copy them to the local binary directory_
+```
+tar xf bitcoin-0.20.0rc1-x86_64-linux-gnu.tar.gz
+sudo cp bitcoin-0.20.0rc1/bin/bitcoin-cli /usr/local/bin/
+sudo cp bitcoin-0.20.0rc1/bin/bitcoind /usr/local/bin/
+```
+
+### Install QR code dependencies
 ```
 sudo apt-get install qrencode zbar-tools -y
 ```
 
-_Download Proof Wallet_
+### Download Proof Wallet
 ```
-cd /home/ubuntu
 git clone https://github.com/hodlwave/proof-wallet.git
-cd /home/ubuntu/proof-wallet
-git checkout proof-wallet
+cd proof-wallet
 ```
 
 ## Wallet Programs
