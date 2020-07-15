@@ -25,12 +25,6 @@
 
 # standard Python libraries
 import argparse
-from collections import OrderedDict
-from decimal import Decimal
-import glob
-from hashlib import sha256, md5, new as hashlib_new
-from binascii import unhexlify, hexlify
-from mnemonic import Mnemonic
 import json
 import os
 import shlex
@@ -38,6 +32,12 @@ import subprocess
 import sys
 import time
 import re
+import glob
+from decimal import Decimal
+from hashlib import sha256, md5, new as hashlib_new
+from binascii import unhexlify, hexlify
+from mnemonic import Mnemonic
+
 # Taken from https://github.com/keis/base58
 from base58 import b58encode_check, b58decode
 
