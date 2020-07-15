@@ -1,0 +1,3 @@
+[submodule "python-mnemonic"]
+	path = python-mnemonic
+	url = https://github.com/trezor/python-mnemonic.git

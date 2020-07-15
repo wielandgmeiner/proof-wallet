@@ -363,18 +363,18 @@ def get_mnemonic_interactive():
     Prompts the user for a valid 24 word BIP39 mnemonic phrase
     return => <string> xprv derived from the mnemonic (and empty passphrase)
     """
-    M = Mnemonic()
+    mnemo = Mnemonic("english")
     raw_mnemonic = input("\nEnter the 24 word mnemonic phrase (separate the words with whitespace): ")
     words = raw_mnemonic.split()
     mnemonic = " ".join(words)
     if len(words) != 24:
         print("Error: Mnemonic phrase must be exactly 24 words long. Exiting.")
         sys.exit(1)
-    if M.check(mnemonic) != True:
+    if mnemo.check(mnemonic) != True:
         print("Error: The mnemonic phrase is invalid. Exiting.")
         sys.exit(1)
-    seed = M.to_seed(mnemonic)
-    return M.to_hd_master_key(seed, network)
+    seed = mnemo.to_seed(mnemonic)
+    return mnemo.to_hd_master_key(seed, network in {"testnet", "regtest"})
 
 def get_xpubs_interactive(n):
     """
@@ -833,10 +833,10 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
     bin_private_key = unhexlify(hex_private_key)
 
    # convert private key to BIP39 mnemonic phrase
-    M = Mnemonic()
-    mnemonic = M.to_mnemonic(bin_private_key)
-    seed = M.to_seed(mnemonic)
-    xprv = M.to_hd_master_key(seed, network)
+    mnemo = Mnemonic("english")
+    mnemonic = mnemo.to_mnemonic(bin_private_key)
+    seed = mnemo.to_seed(mnemonic)
+    xprv = mnemo.to_hd_master_key(seed, network in {"testnet", "regtest"})
 
     print("\nBIP39 Mnemonic Phrase: ")
     words = mnemonic.split(" ")
