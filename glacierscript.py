@@ -844,9 +844,11 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
         print("{}. {}".format(i + 1, word))
 
     xpub = get_xpub_from_xkey(xprv)
-    print("\nxpub:\n{}\n".format(xpub))
+    fng = get_fingerprint_from_xkey(xpub)
+    key_origin = "[{}]{}".format(fng, xpub)
+    print("\npublic key metadata:\n{}\n".format(key_origin))
 
-    write_and_verify_qr_code("xpub", "xpub.png", xpub)
+    write_and_verify_qr_code("public-key-metadata", "public-key-metadata.png", key_origin)
 
 ################################################################################################
 #

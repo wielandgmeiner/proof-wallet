@@ -30,7 +30,7 @@ BIP39 Mnemonic Phrase:
 23. focus
 24. wolf
 
-xpub:
-tpubD6NzVbkrYhZ4YTjZqdGdMpqtd7BFKkERJcK3hjQx4gtHC3xowC5EKAsHY5tgx1coSC6sbw6X7Ngc1AFrVEzgwFFAF8pbsU5n28yYiZrxTAg
+public key metadata:
+[0b88a937]tpubD6NzVbkrYhZ4YTjZqdGdMpqtd7BFKkERJcK3hjQx4gtHC3xowC5EKAsHY5tgx1coSC6sbw6X7Ngc1AFrVEzgwFFAF8pbsU5n28yYiZrxTAg
 
-QR code for xpub written to xpub.png
+QR code for public-key-metadata written to public-key-metadata.png
