@@ -53,7 +53,7 @@ FINGERPRINT_PATTERN = "(?P<fng>[a-fA-F0-9]{8})"
 PATH_PATTERN = "(?P<path>(?:(?:/)(?:\d+)(?:['h]{0,1}))*)"
 XPUB_PATTERN = "(?P<xpub>\w{110,112})"
 DESCRIPTOR_KEY_PATTERN = re.compile("^\[" + FINGERPRINT_PATTERN + PATH_PATTERN + "\]" + XPUB_PATTERN + "$")
-CHANGE_INDEX_PATH_PATTERN = "^m/([01])/(0|[1-9][0-9]*)$" # match m/{change}/{idx} and prevent leading zeros
+UNHARDENED_PATH_PATTERN = "^/([01])/(0|[1-9][0-9]*)$" # match /{change}/{idx} and prevent leading zeros
 ################################################################################################
 #
 # Minor helper functions
@@ -521,20 +521,42 @@ def walletprocesspsbt(psbt, idxs, xkeys, m):
     importmulti(idxs, xkeys, m)
     return bitcoin_cli_json("walletprocesspsbt", psbt, "true", "ALL")
 
-def validate_psbt_in(xkeys, m, fps, _input, i, response):
+def validate_psbt_bip32_derivs(dkeys, psbt_in_or_out, i, what):
+    # Ensure input contains BIP32 derivations
+    if "bip32_derivs" not in psbt_in_or_out:
+        return ("Tx {} {} does not contain bip32 derivation metadata.".format(what, i), None, None)
+    bip32_derivs = psbt_in_or_out["bip32_derivs"]
+
+    # Ensure the bip32 derivations specified in the psbt input/output are consistent with out wallet's
+    expected_fps = set(map(lambda dkey: dkey[0], dkeys))
+    actual_fps = set(map(lambda bip32_deriv: bip32_deriv["master_fingerprint"], bip32_derivs))
+    if expected_fps != actual_fps or len(dkeys) != len(bip32_derivs):
+        return ("Tx {} {} does not have the correct set of fingerprints.".format(what, i), None, None)
+
+    # Ensure each public key derives from the correct hardened path for its master fingerprint, and
+    # the _same_, _allowed_ unhardened path
+    input_paths = set()
+    for fng, expected_path, xpub in dkeys:
+        # get corresponding bip32 derivation by master fingerprint (guaranteed to succeed)
+        bip32_deriv = list(filter(lambda bip32_deriv: bip32_deriv["master_fingerprint"] == fng, bip32_derivs)).pop()
+        # check that hardened path matches cosigner hardened derivation path
+        path_arr = bip32_deriv["path"].split(expected_path)
+        if len(path_arr) != 2 and path_arr[0] != "":
+            return ("Tx {} {} contains invalid bip32 derivations for cosigner {}".format(what, i, fng), None, None)
+        input_paths.add(path_arr[1])
+    if len(input_paths) != 1:
+        return ("Tx {} {} contains different bip32 derivation paths for multiple descriptor keys".format(what, i), None, None)
+    input_path = input_paths.pop()
+    match_object = re.match(UNHARDENED_PATH_PATTERN, input_path)
+    if match_object is None:
+        return ("Tx {} {} contains an unsupported unhardened bip32 derivation path: {}".format(what, i, input_path), None, None)
+    change, idx = map(int, match_object.groups())
+    return (None, change, idx)
+
+def validate_psbt_in(dkeys, m, _input, i, response):
     # Ensure input spends a witness UTXO
     if "non_witness_utxo" in _input or "witness_utxo" not in _input:
         return "Tx input {} doesn't spend the expected segwit utxo.".format(i)
-
-    # Ensure input contains BIP32 derivations
-    if "bip32_derivs" not in _input:
-        return "Tx input {} does not contain bip32 derivation metadata.".format(i)
-
-    # Get the set of master fingerprints in the input's BIP32 derivations; ensure
-    # they are consistent with the wallet's fingerprints
-    input_fps = set(map(lambda deriv: deriv["master_fingerprint"], _input["bip32_derivs"]))
-    if fps != input_fps:
-        return "Tx input {} does not have the correct set of fingerprints.".format(i)
 
     # Ensure the witness utxo is the expected type: witness_v0_scripthash
     scriptpubkey_type = _input["witness_utxo"]["scriptPubKey"]["type"]
@@ -552,22 +574,17 @@ def validate_psbt_in(xkeys, m, fps, _input, i, response):
     if witness_script_hash != scriptPubKeyParts[1]:
         return "The hash of the witness script for Tx input {} does not match the provided witness UTXO scriptPubKey".format(i)
 
+    # Validate psbt input bip32 derivations
+    (bip32_derivs_err, change, idx) = validate_psbt_bip32_derivs(dkeys, _input, i, "input")
+    if bip32_derivs_err is not None:
+        return bip32_derivs_err
+
     # Ensure that the actual address contained in the witness_utxo matches our
     # expectations given the BIP32 derivations provided
     actual_address = _input["witness_utxo"]["scriptPubKey"]["address"]
 
-    # Ensure each public key comes from the same derivation path and this derivation path
-    # abides by the proper format (enforced by regex)
-    input_paths = set(map(lambda deriv: deriv["path"], _input["bip32_derivs"]))
-    if len(input_paths) != 1:
-        return "Tx input {} contains different bip32 derivation paths for multiple xpubs".format(i)
-    input_path = input_paths.pop()
-    match_object = re.match(CHANGE_INDEX_PATH_PATTERN, input_path)
-    if match_object is None:
-        return "Tx input {} contains an unsupported bip32 derivation path: {}".format(i, input_path)
-    change, idx = map(int, match_object.groups())
-
     # Ensure expected address implied by metadata matches actual address supplied
+    xkeys = list(map(lambda dkey: dkey[2], dkeys))
     [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
     if expected_address != actual_address:
         return "Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(i)
@@ -580,7 +597,7 @@ def validate_psbt_in(xkeys, m, fps, _input, i, response):
     response["importmulti_idxs"].add(idx)
     return None
 
-def validate_psbt_out(xkeys, m, fps, tx, output, i, response):
+def validate_psbt_out(dkeys, m, tx, output, i, response):
     # Get the corresponding Tx ouput
     tx_out = tx["vout"][i]
     if "bip32_derivs" not in output:
@@ -594,28 +611,17 @@ def validate_psbt_out(xkeys, m, fps, tx, output, i, response):
     if scriptpubkey_type != "witness_v0_scripthash":
         return None
 
-    # Get the set of fingerprints in the output's BIP32 derivations; the output cannot
-    # be change if ITS fingerprints are not consistent with OUR fingerprints
-    output_fps = set(map(lambda deriv: deriv["master_fingerprint"], output["bip32_derivs"]))
-    if fps != output_fps:
-        return None
-
     # Get the actual Tx address from the scriptPubKey
     [actual_address] = tx_out["scriptPubKey"]["addresses"]
 
-    # Ensure each public key comes from the same derivation path and this derivation path
-    # abides by the proper format (enforced by regex)
-    output_paths = set(map(lambda deriv: deriv["path"], output["bip32_derivs"]))
-    if len(output_paths) != 1:
-        return "Tx output {} contains different bip32 derivation paths for multiple xpubs".format(i)
-    output_path = output_paths.pop()
-    match_object = re.match(CHANGE_INDEX_PATH_PATTERN, output_path)
-    if match_object is None:
-        return "Tx output {} contains an unsupported bip32 derivation path: {}".format(i, output_path)
-    change, idx = map(int, match_object.groups())
+    # Validate psbt output bip32 derivations
+    (bip32_derivs_err, change, idx) = validate_psbt_bip32_derivs(dkeys, output, i, "output")
+    if bip32_derivs_err is not None:
+        return bip32_derivs_err
 
     # Ensure the actual address in the Tx output matches the expected address given
     # the BIP32 derivation paths
+    xkeys = list(map(lambda dkey: dkey[2], dkeys))
     [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
     if expected_address != actual_address:
         return "Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i)
@@ -638,7 +644,7 @@ def validate_psbt_out(xkeys, m, fps, tx, output, i, response):
     response["change_idxs"].append(i) # change validations pass
     return None
 
-def validate_psbt(psbt_raw, xkeys, m):
+def validate_psbt(psbt_raw, dkeys, m):
     """
     ******************************************************************
     ********************  SECURITY CRITICAL  *************************
@@ -647,7 +653,7 @@ def validate_psbt(psbt_raw, xkeys, m):
 
 
     psbt_raw: <string>  base64 encoded psbt
-    xkeys: List<string> BIP32 extended keys (includes 1 xprv)
+    dkeys: List<string> wallet descriptor keys (including our xprv)
     m: <int> number of multisig keys required for withdrawal
 
     returns: dict
@@ -674,20 +680,19 @@ def validate_psbt(psbt_raw, xkeys, m):
         # attempt to analyze psbt (should always succeed if decode succeeds)
         response["analysis"] = bitcoin_cli_json("analyzepsbt", psbt_raw)
         response["success"].append("The provided base64 encoded input is a valid PSBT.")
-        fps = set(map(lambda xkey: get_fingerprint_from_xkey(xkey), xkeys))
 
-        # INPUTS VALIDATIONS
+        # validate all inputs
         for i, _input in enumerate(psbt["inputs"]):
-            psbt_in_validation_err = validate_psbt_in(xkeys, m, fps, _input, i, response)
+            psbt_in_validation_err = validate_psbt_in(dkeys, m, _input, i, response)
             if psbt_in_validation_err is not None:
                 response["error"] = psbt_in_validation_err
                 return response
         response["success"].append("All input validations succeeded.")
 
-        # OUTPUTS VALIDATIONS
+        # validate all outputs
         tx = psbt["tx"]
         for i, output in enumerate(psbt["outputs"]):
-            psbt_out_validation_err = validate_psbt_out(xkeys, m, fps, tx, output, i, response)
+            psbt_out_validation_err = validate_psbt_out(dkeys, m, tx, output, i, response)
             if psbt_out_validation_err is not None:
                 response["error"] = psbt_out_validation_err
                 return response
@@ -988,7 +993,8 @@ def sign_psbt_interactive(m, n):
     # prompt user for mnemonic and all xpubs in the multisignature quorum
     my_xprv = get_mnemonic_interactive()
     my_xpub = get_xpub_from_xkey(my_xprv)
-    xpubs = get_xpubs_interactive(n)
+    dkeys = get_descriptor_keys_interactive(n)
+    xpubs = list(map(lambda dkey: dkey[2], dkeys))
 
     if my_xpub not in xpubs:
         print("Error: None of the provided xpubs match the provided mnemonic phrase. Exiting.")
@@ -999,7 +1005,7 @@ def sign_psbt_interactive(m, n):
     psbt_raw = input("\nEnter the psbt for the transaction you wish to sign: ")
 
     print("\nValidating the PSBT...")
-    psbt_validation = validate_psbt(psbt_raw, xkeys, m)
+    psbt_validation = validate_psbt(psbt_raw, dkeys, m)
     if psbt_validation["error"] is not None:
         print("Error: {}".format(psbt_validation["error"]))
         sys.exit(1)
