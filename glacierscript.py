@@ -49,6 +49,11 @@ FEE_RATE_MULTIPLIER = 10**5 # BTC/kB -> sat/byte
 
 LINE_BREAK = "=" * 80
 
+FINGERPRINT_PATTERN = "(?P<fng>[a-fA-F0-9]{8})"
+PATH_PATTERN = "(?P<path>(?:(?:/)(?:\d+)(?:['h]{0,1}))*)"
+XPUB_PATTERN = "(?P<xpub>\w{110,112})"
+DESCRIPTOR_KEY_PATTERN = re.compile("^\[" + FINGERPRINT_PATTERN + PATH_PATTERN + "\]" + XPUB_PATTERN + "$")
+
 ################################################################################################
 #
 # Minor helper functions
@@ -358,6 +363,28 @@ def is_valid_xpub(xpub):
         print("Error: The provided xpub is invalid. Exiting.")
     sys.exit(1)
 
+def parse_descriptor_key(key):
+    regex_match = re.match(DESCRIPTOR_KEY_PATTERN, key)
+    if regex_match is None:
+        print("Error: The provided descriptor key is invalid. Exiting.")
+        sys.exit(1)
+    fng, path, xpub = regex_match.group('fng'), regex_match.group('path'), regex_match.group('xpub')
+    # parse path
+    if path == "":
+        path = "m"
+    else:
+        path_arr = path.replace("h", "'").split("/")[1:]
+        for idx in path_arr:
+            if idx[-1] == "'":
+                idx = idx[:-1]
+            if str(int(idx)) != idx: # check for leading zeros
+                print("Error: The provided descriptor key contains leading zeros. Exiting.")
+                sys.exit(1)
+        path = "m/" + "/".join(path_arr)
+    # validate xpub
+    is_valid_xpub(xpub)
+    return fng, path, xpub
+
 def get_mnemonic_interactive():
     """
     Prompts the user for a valid 24 word BIP39 mnemonic phrase
@@ -397,6 +424,29 @@ def get_xpubs_interactive(n):
         sys.exit(1)
 
     return xpubs
+
+def get_descriptor_keys_interactive(n):
+    """
+    Prompts the user for n unique and valid descriptor keys (must include fingerprint)
+
+    n: <int> the number of descriptor keys to import
+
+    returns: List<string> the list of validated descriptor keys
+    """
+    keys = []
+    print("\nInput {} valid descriptor keys".format(n))
+    for idx in range(n):
+        key_str = input("\nEnter descriptor key #{}: ".format(idx+1))
+        key = parse_descriptor_key(key_str)
+        keys.append(key)
+
+    unique_fingerprints = set(map(lambda key: key[0], keys))
+    unique_xpubs = set(map(lambda key: key[2], keys))
+    if len(unique_fingerprints) != n or len(unique_xpubs) != n:
+        print("Expected {} unique descriptor keys. Exiting".format(n))
+        sys.exit(1)
+
+    return keys
 
 def wsh_descriptor(xkeys, m, change = 0):
     """
