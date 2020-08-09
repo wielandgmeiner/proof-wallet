@@ -53,7 +53,7 @@ FINGERPRINT_PATTERN = "(?P<fng>[a-fA-F0-9]{8})"
 PATH_PATTERN = "(?P<path>(?:(?:/)(?:\d+)(?:['h]{0,1}))*)"
 XPUB_PATTERN = "(?P<xpub>\w{110,112})"
 DESCRIPTOR_KEY_PATTERN = re.compile("^\[" + FINGERPRINT_PATTERN + PATH_PATTERN + "\]" + XPUB_PATTERN + "$")
-
+CHANGE_INDEX_PATH_PATTERN = "^m/([01])/(0|[1-9][0-9]*)$" # match m/{change}/{idx} and prevent leading zeros
 ################################################################################################
 #
 # Minor helper functions
@@ -521,6 +521,123 @@ def walletprocesspsbt(psbt, idxs, xkeys, m):
     importmulti(idxs, xkeys, m)
     return bitcoin_cli_json("walletprocesspsbt", psbt, "true", "ALL")
 
+def validate_psbt_in(xkeys, m, fps, _input, i, response):
+    # Ensure input spends a witness UTXO
+    if "non_witness_utxo" in _input or "witness_utxo" not in _input:
+        return "Tx input {} doesn't spend the expected segwit utxo.".format(i)
+
+    # Ensure input contains BIP32 derivations
+    if "bip32_derivs" not in _input:
+        return "Tx input {} does not contain bip32 derivation metadata.".format(i)
+
+    # Get the set of master fingerprints in the input's BIP32 derivations; ensure
+    # they are consistent with the wallet's fingerprints
+    input_fps = set(map(lambda deriv: deriv["master_fingerprint"], _input["bip32_derivs"]))
+    if fps != input_fps:
+        return "Tx input {} does not have the correct set of fingerprints.".format(i)
+
+    # Ensure the witness utxo is the expected type: witness_v0_scripthash
+    scriptpubkey_type = _input["witness_utxo"]["scriptPubKey"]["type"]
+    if scriptpubkey_type != "witness_v0_scripthash":
+        return "Tx input {} contains an incorrect scriptPubKey type.".format(i)
+
+    # Ensure input contains a witness script
+    if "witness_script" not in _input:
+        return "Tx input {} doesn't contain a witness script".format(i)
+
+    # Ensure that the witness script hash equals the scriptPubKey
+    witness_script = _input["witness_script"]["hex"]
+    witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
+    scriptPubKeyParts = _input["witness_utxo"]["scriptPubKey"]["asm"].split(" ")
+    if witness_script_hash != scriptPubKeyParts[1]:
+        return "The hash of the witness script for Tx input {} does not match the provided witness UTXO scriptPubKey".format(i)
+
+    # Ensure that the actual address contained in the witness_utxo matches our
+    # expectations given the BIP32 derivations provided
+    actual_address = _input["witness_utxo"]["scriptPubKey"]["address"]
+
+    # Ensure each public key comes from the same derivation path and this derivation path
+    # abides by the proper format (enforced by regex)
+    input_paths = set(map(lambda deriv: deriv["path"], _input["bip32_derivs"]))
+    if len(input_paths) != 1:
+        return "Tx input {} contains different bip32 derivation paths for multiple xpubs".format(i)
+    input_path = input_paths.pop()
+    match_object = re.match(CHANGE_INDEX_PATH_PATTERN, input_path)
+    if match_object is None:
+        return "Tx input {} contains an unsupported bip32 derivation path: {}".format(i, input_path)
+    change, idx = map(int, match_object.groups())
+
+    # Ensure expected address implied by metadata matches actual address supplied
+    [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
+    if expected_address != actual_address:
+        return "Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(i)
+
+    # Ensure sighash is not set at all or set correctly
+    if "sighash" in _input and _input["sighash"] != "ALL":
+        return "Tx input {} specifies an unsupported sighash type: {}".format(i, _input["sighash"])
+
+    # validation successful (update importmulti indices)
+    response["importmulti_idxs"].add(idx)
+    return None
+
+def validate_psbt_out(xkeys, m, fps, tx, output, i, response):
+    # Get the corresponding Tx ouput
+    tx_out = tx["vout"][i]
+    if "bip32_derivs" not in output:
+        # consider this output as not part of this wallet not an error or
+        # warning as this could be a valid output spend
+        return None
+
+    # The output cannot be change if it doesn't spend  back to the proper
+    # output type: witness_v0_scripthash
+    scriptpubkey_type = tx_out["scriptPubKey"]["type"]
+    if scriptpubkey_type != "witness_v0_scripthash":
+        return None
+
+    # Get the set of fingerprints in the output's BIP32 derivations; the output cannot
+    # be change if ITS fingerprints are not consistent with OUR fingerprints
+    output_fps = set(map(lambda deriv: deriv["master_fingerprint"], output["bip32_derivs"]))
+    if fps != output_fps:
+        return None
+
+    # Get the actual Tx address from the scriptPubKey
+    [actual_address] = tx_out["scriptPubKey"]["addresses"]
+
+    # Ensure each public key comes from the same derivation path and this derivation path
+    # abides by the proper format (enforced by regex)
+    output_paths = set(map(lambda deriv: deriv["path"], output["bip32_derivs"]))
+    if len(output_paths) != 1:
+        return "Tx output {} contains different bip32 derivation paths for multiple xpubs".format(i)
+    output_path = output_paths.pop()
+    match_object = re.match(CHANGE_INDEX_PATH_PATTERN, output_path)
+    if match_object is None:
+        return "Tx output {} contains an unsupported bip32 derivation path: {}".format(i, output_path)
+    change, idx = map(int, match_object.groups())
+
+    # Ensure the actual address in the Tx output matches the expected address given
+    # the BIP32 derivation paths
+    [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
+    if expected_address != actual_address:
+        return "Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i)
+
+    # Ensure that the witness script hash maps to the transaction output's scriptPubKey
+    if "witness_script" not in output:
+        return "Tx output {} contains no witness script".format(i)
+    witness_script = output["witness_script"]["hex"]
+    witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
+    scriptPubKeyParts = tx_out["scriptPubKey"]["asm"].split(" ")
+    if witness_script_hash != scriptPubKeyParts[1]:
+        return "The hash of the witness script for Tx output {} does not match the Tx output's scriptPubKey".format(i)
+
+    # Allow a user to spend change to an external address, but display a warning
+    if change == 0:
+        warning = "Tx output {} spends change to an external receive address. If this is the "
+        warning += "intended behavior, you can safely ignore this warning."
+        response["warning"].append(warning.format(i))
+
+    response["change_idxs"].append(i) # change validations pass
+    return None
+
 def validate_psbt(psbt_raw, xkeys, m):
     """
     ******************************************************************
@@ -556,146 +673,24 @@ def validate_psbt(psbt_raw, xkeys, m):
         psbt = bitcoin_cli_json("decodepsbt", psbt_raw)
         # attempt to analyze psbt (should always succeed if decode succeeds)
         response["analysis"] = bitcoin_cli_json("analyzepsbt", psbt_raw)
-
-        pattern = "^m/([01])/(0|[1-9][0-9]*)$" # match m/{change}/{idx} and prevent leading zeros
         response["success"].append("The provided base64 encoded input is a valid PSBT.")
-
         fps = set(map(lambda xkey: get_fingerprint_from_xkey(xkey), xkeys))
 
         # INPUTS VALIDATIONS
         for i, _input in enumerate(psbt["inputs"]):
-            # Ensure input spends a witness UTXO
-            if "non_witness_utxo" in _input or "witness_utxo" not in _input:
-                response["error"] = "Tx input {} doesn't spend the expected segwit utxo.".format(i)
+            psbt_in_validation_err = validate_psbt_in(xkeys, m, fps, _input, i, response)
+            if psbt_in_validation_err is not None:
+                response["error"] = psbt_in_validation_err
                 return response
-
-            # Ensure input contains BIP32 derivations
-            if "bip32_derivs" not in _input:
-                response["error"] = "Tx input {} does not contain bip32 derivation metadata.".format(i)
-                return response
-
-            # Get the set of master fingerprints in the input's BIP32 derivations; ensure
-            # they are consistent with the wallet's fingerprints
-            input_fps = set(map(lambda deriv: deriv["master_fingerprint"], _input["bip32_derivs"]))
-            if fps != input_fps:
-                response["error"] = "Tx input {} does not have the correct set of fingerprints.".format(i)
-                return response
-
-            # Ensure the witness utxo is the expected type: witness_v0_scripthash
-            scriptpubkey_type = _input["witness_utxo"]["scriptPubKey"]["type"]
-            if scriptpubkey_type != "witness_v0_scripthash":
-                response["error"] = "Tx input {} contains an incorrect scriptPubKey type.".format(i)
-                return response
-
-            # Ensure input contains a witness script
-            if "witness_script" not in _input:
-                response["error"] = "Tx input {} doesn't contain a witness script".format(i)
-                return response
-
-            # Ensure that the witness script hash equals the scriptPubKey
-            witness_script = _input["witness_script"]["hex"]
-            witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
-            scriptPubKeyParts = _input["witness_utxo"]["scriptPubKey"]["asm"].split(" ")
-            if witness_script_hash != scriptPubKeyParts[1]:
-                response["error"] = "The hash of the witness script for Tx input {} does not match the provided witness UTXO scriptPubKey".format(i)
-                return response
-
-            # Ensure that the actual address contained in the witness_utxo matches our
-            # expectations given the BIP32 derivations provided
-            actual_address = _input["witness_utxo"]["scriptPubKey"]["address"]
-
-            # Ensure each public key comes from the same derivation path and this derivation path
-            # abides by the proper format (enforced by regex)
-            input_paths = set(map(lambda deriv: deriv["path"], _input["bip32_derivs"]))
-            if len(input_paths) != 1:
-                response["error"] = "Tx input {} contains different bip32 derivation paths for multiple xpubs".format(i)
-                return response
-            input_path = input_paths.pop()
-            match_object = re.match(pattern, input_path)
-            if match_object is None:
-                response["error"] = "Tx input {} contains an unsupported bip32 derivation path: {}".format(i, input_path)
-                return response
-            change, idx = map(int, match_object.groups())
-
-            # Ensure expected address implied by metadata matches actual address supplied
-            [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
-            if expected_address != actual_address:
-                response["error"] = "Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(i)
-                return response
-
-            # Ensure sighash is not set at all or set correctly
-            if "sighash" in _input and _input["sighash"] != "ALL":
-                response["error"] = "Tx input {} specifies an unsupported sighash type: {}".format(i, _input["sighash"])
-                return response
-
-            # Update impormulti_idxs
-            response["importmulti_idxs"].add(idx)
-
         response["success"].append("All input validations succeeded.")
 
         # OUTPUTS VALIDATIONS
         tx = psbt["tx"]
         for i, output in enumerate(psbt["outputs"]):
-            # Get the corresponding Tx ouput
-            tx_out = tx["vout"][i]
-            if "bip32_derivs" not in output:
-                # consider this output as not part of this wallet not an error or
-                # warning as this could be a valid output spend
-                continue
-
-            # The output cannot be change if it doesn't spend  back to the proper
-            # output type: witness_v0_scripthash
-            scriptpubkey_type = tx_out["scriptPubKey"]["type"]
-            if scriptpubkey_type != "witness_v0_scripthash":
-                continue
-
-            # Get the set of fingerprints in the output's BIP32 derivations; the output cannot
-            # be change if ITS fingerprints are not consistent with OUR fingerprints
-            output_fps = set(map(lambda deriv: deriv["master_fingerprint"], output["bip32_derivs"]))
-            if fps != output_fps:
-                continue
-
-            # Get the actual Tx address from the scriptPubKey
-            [actual_address] = tx_out["scriptPubKey"]["addresses"]
-
-            # Ensure each public key comes from the same derivation path and this derivation path
-            # abides by the proper format (enforced by regex)
-            output_paths = set(map(lambda deriv: deriv["path"], output["bip32_derivs"]))
-            if len(output_paths) != 1:
-                response["error"] = "Tx output {} contains different bip32 derivation paths for multiple xpubs".format(i)
+            psbt_out_validation_err = validate_psbt_out(xkeys, m, fps, tx, output, i, response)
+            if psbt_out_validation_err is not None:
+                response["error"] = psbt_out_validation_err
                 return response
-            output_path = output_paths.pop()
-            match_object = re.match(pattern, output_path)
-            if match_object is None:
-                response["error"] = "Tx output {} contains an unsupported bip32 derivation path: {}".format(i, output_path)
-                return response
-            change, idx = map(int, match_object.groups())
-
-            # Ensure the actual address in the Tx output matches the expected address given
-            # the BIP32 derivation paths
-            [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
-            if expected_address != actual_address:
-                response["error"] = "Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i)
-                return response
-
-            # Ensure that the witness script hash maps to the transaction output's scriptPubKey
-            if "witness_script" not in output:
-                response["error"] = "Tx output {} contains no witness script".format(i)
-                return response
-            witness_script = output["witness_script"]["hex"]
-            witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
-            scriptPubKeyParts = tx_out["scriptPubKey"]["asm"].split(" ")
-            if witness_script_hash != scriptPubKeyParts[1]:
-                response["error"] = "The hash of the witness script for Tx output {} does not match the Tx output's scriptPubKey".format(i)
-                return response
-
-            # Allow a user to spend change to an external address, but display a warning
-            if change == 0:
-                warning = "Tx output {} spends change to an external receive address. If this is the "
-                warning += "intended behavior, you can safely ignore this warning."
-                response["warning"].append(warning.format(i))
-
-            response["change_idxs"].append(i) # change validations pass
 
         # Display a warning to the user if we can't recognize any change (suspicious)
         if len(response["change_idxs"]) == 0:
