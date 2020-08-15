@@ -403,28 +403,6 @@ def get_mnemonic_interactive():
     seed = mnemo.to_seed(mnemonic)
     return mnemo.to_hd_master_key(seed, network in {"testnet", "regtest"})
 
-def get_xpubs_interactive(n):
-    """
-    Prompts the user for n unique and valid xpubs
-
-    n: <int> the number of xpubs to import
-
-    returns: List<string> the list of validated xpubs
-    """
-    xpubs = []
-    print("\nInput {} valid xpubs".format(n))
-    for idx in range(n):
-        xpub = input("\nEnter xpub #{}: ".format(idx+1))
-        is_valid_xpub(xpub)
-        xpubs.append(xpub)
-
-    unique_xpubs = set(xpubs)
-    if len(unique_xpubs) != n:
-        print("Expected {} unique xpubs, but found {}. Exiting".format(n, len(unique_xpubs)))
-        sys.exit(1)
-
-    return xpubs
-
 def get_descriptor_keys_interactive(n):
     """
     Prompts the user for n unique and valid descriptor keys (must include fingerprint)
@@ -555,8 +533,8 @@ def validate_psbt_bip32_derivs(dkeys, psbt_in_or_out, i, what):
 
 def validate_psbt_in(dkeys, m, _input, i, response):
     # Ensure input spends a witness UTXO
-    if "non_witness_utxo" in _input or "witness_utxo" not in _input:
-        return "Tx input {} doesn't spend the expected segwit utxo.".format(i)
+    if not ("non_witness_utxo" in _input and "witness_utxo" in _input):
+        return "Tx input {} must include both witness and non-witness utxo.".format(i)
 
     # Ensure the witness utxo is the expected type: witness_v0_scripthash
     scriptpubkey_type = _input["witness_utxo"]["scriptPubKey"]["type"]
@@ -920,12 +898,14 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
 
     if trust_xpubs:
         # only prompt user for xpubs
-        xkeys = get_xpubs_interactive(n)
+        dkeys = get_descriptor_keys_interactive(n)
+        xkeys = list(map(lambda dkey: dkey[2], dkeys))
     else:
         # prompt user for mnemonic and all xpubs in the multisignature quorum
         my_xprv = get_mnemonic_interactive()
         my_xpub = get_xpub_from_xkey(my_xprv)
-        xpubs = get_xpubs_interactive(n)
+        dkeys = get_descriptor_keys_interactive(n)
+        xpubs = list(map(lambda dkey: dkey[2], dkeys))
 
         if my_xpub not in xpubs:
             print("Error: No xpubs match the xpub of the provided mnemonic phrase. Exiting.")
@@ -941,7 +921,7 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
         print("Derivation Path, Address")
         for i, addr in enumerate(addresses):
             idx = start + i
-            print("[{}] m/{}/{}: {}".format(str(i), str(change), idx, addr))
+            print("[{}] .../{}/{}: {}".format(str(i), str(change), idx, addr))
         print("\nControls:")
         print("    'NEXT' -- view next {} addresses".format(N))
         print("    'PREV' -- view previous {} addresses".format(N))
