@@ -426,39 +426,39 @@ def get_descriptor_keys_interactive(n):
 
     return keys
 
-def wsh_descriptor(xkeys, m, change = 0):
+def wsh_descriptor(dkeys, m, change = 0):
     """
     Creates the desired Bitcoin Core sortedmulti wsh descriptor for
-    the provided extended keys
+    the provided descriptor keys
 
-    xkeys: List<string> BIP32 extended keys
+    dkeys: List<string> wallet descriptor keys
     m: <int> number of multisig keys required for withdrawal
     change: <int> internal or external descriptor
     """
 
     # create descriptor without checksum
-    descriptor = "wsh(sortedmulti({},".format(str(m))
-    for xkey in xkeys:
-        fp = get_fingerprint_from_xkey(xkey)
-        descriptor += "[{}]{}/{}/*,".format(fp, xkey, str(change))
-    descriptor = descriptor[:-1] # drop trailing comma
-    descriptor += "))"
+    dkeys_str = ",".join([
+        "{}/{}/*".format(dkey, str(change))
+        for _, _, dkey
+        in dkeys
+    ])
+    descriptor = "wsh(sortedmulti({},{}))".format(str(m), dkeys_str)
 
     # getdescriptorinfo and append checksum
     output = bitcoin_cli_json("getdescriptorinfo", descriptor)
     return descriptor + "#" + output["checksum"]
 
-def importmulti(idxs, xkeys, m):
+def importmulti(idxs, dkeys, m):
     """
     Imports private key data for (external and internal) addresses at the given
     indices into Bitcoin Core
 
     idxs: Set<int> address indices to perform the import
-    xkeys: List<string> BIP32 extended keys
+    dkeys: List<string> wallet descriptor keys
     m: <int> number of multisig keys required for withdrawal
     """
     for change in {0, 1}:
-        desc = wsh_descriptor(xkeys, m, change)
+        desc = wsh_descriptor(dkeys, m, change)
         args = []
         for i in idxs:
             args.append({
@@ -471,32 +471,32 @@ def importmulti(idxs, xkeys, m):
             })
         bitcoin_cli_json("importmulti", json.dumps(args))
 
-def deriveaddresses(xkeys, m, start, end, change=0):
+def deriveaddresses(dkeys, m, start, end, change=0):
     """
     Derives wallet addresses based on the requested parameters
 
-    xkeys: List<string> BIP32 extended keys
+    dkeys: List<string> wallet descriptor keys
     m: <int> number of multisig keys required for withdrawal
     start: <int> first index to derive address of
     end: <int> last index to derive address of
     change: <int> internal or external address
     """
-    desc = wsh_descriptor(xkeys, m, change)
+    desc = wsh_descriptor(dkeys, m, change)
     return bitcoin_cli_json("deriveaddresses", desc, json.dumps([start, end]))
 
 
-def walletprocesspsbt(psbt, idxs, xkeys, m):
+def walletprocesspsbt(psbt, idxs, dkeys, m):
     """
     Signs a psbt after importing the necessary key data
 
     psbt: <str> base64 encoded psbt
     idxs: Set<int> indices to import into Bitcoin Core to sign the psbt
-    xkeys: List<string> BIP32 extended keys (includes 1 xprv)
+    dkeys: List<string> wallet descriptor keys (includes 1 xprv)
     m: <int> number of multisig keys required for withdrawal
     """
 
     # import the descriptors necessary to process the provided psbt
-    importmulti(idxs, xkeys, m)
+    importmulti(idxs, dkeys, m)
     return bitcoin_cli_json("walletprocesspsbt", psbt, "true", "ALL")
 
 def validate_psbt_bip32_derivs(dkeys, psbt_in_or_out, i, what):
@@ -562,8 +562,7 @@ def validate_psbt_in(dkeys, m, _input, i, response):
     actual_address = _input["witness_utxo"]["scriptPubKey"]["address"]
 
     # Ensure expected address implied by metadata matches actual address supplied
-    xkeys = list(map(lambda dkey: dkey[2], dkeys))
-    [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
+    [expected_address] = deriveaddresses(dkeys, m, idx, idx, change)
     if expected_address != actual_address:
         return "Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(i)
 
@@ -599,8 +598,7 @@ def validate_psbt_out(dkeys, m, tx, output, i, response):
 
     # Ensure the actual address in the Tx output matches the expected address given
     # the BIP32 derivation paths
-    xkeys = list(map(lambda dkey: dkey[2], dkeys))
-    [expected_address] = deriveaddresses(xkeys, m, idx, idx, change)
+    [expected_address] = deriveaddresses(dkeys, m, idx, idx, change)
     if expected_address != actual_address:
         return "Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i)
 
@@ -917,7 +915,7 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
     change = 0
     while True:
         print(LINE_BREAK)
-        addresses = deriveaddresses(xkeys, m, start, start + N - 1, change=0)
+        addresses = deriveaddresses(dkeys, m, start, start + N - 1, change=0)
         print("Derivation Path, Address")
         for i, addr in enumerate(addresses):
             idx = start + i
@@ -1071,7 +1069,7 @@ def sign_psbt_interactive(m, n):
 
         if cmd == "SIGN":
             # sign psbt and write QR code(s)
-            psbt_signed = walletprocesspsbt(psbt_raw, psbt_validation["importmulti_idxs"], xkeys, m)
+            psbt_signed = walletprocesspsbt(psbt_raw, psbt_validation["importmulti_idxs"], dkeys, m)
 
             # show text of signed PSBT
             print("\nRaw signed psbt (base64):")
