@@ -844,7 +844,7 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
     """
     safety_checklist()
     ensure_bitcoind_running()
-    require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
+    require_minimum_bitcoind_version(200100)
 
     print("\nCreating cold storage private key data.\n")
 
@@ -892,7 +892,7 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
 
     safety_checklist()
     ensure_bitcoind_running()
-    require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
+    require_minimum_bitcoind_version(200100)
 
     if trust_xpubs:
         # only prompt user for xpubs
@@ -915,7 +915,7 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
     change = 0
     while True:
         print(LINE_BREAK)
-        addresses = deriveaddresses(dkeys, m, start, start + N - 1, change=0)
+        addresses = deriveaddresses(dkeys, m, start, start + N - 1, change)
         print("Derivation Path, Address")
         for i, addr in enumerate(addresses):
             idx = start + i
@@ -966,7 +966,7 @@ def sign_psbt_interactive(m, n):
 
     safety_checklist()
     ensure_bitcoind_running()
-    require_minimum_bitcoind_version(199900) # TODO: upgrade to 200000 when released
+    require_minimum_bitcoind_version(200100)
 
     # prompt user for mnemonic and all xpubs in the multisignature quorum
     my_xprv = get_mnemonic_interactive()
