@@ -836,11 +836,12 @@ def entropy(length):
 # main "create wallet" function
 #
 ################################################################################################
-def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
+def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32, data_length=32):
     """
     Generate data for a new cold storage multisignature signatory (mnemonic phrase, xpub)
     dice_seed_length: <int> minimum number of dice rolls required
     rng_seed_length: <int> minimum length of random seed required
+    data_length: <int> number of bytes used to construct mnemonic (32 => 24 words, 16 => 12 words)
     """
     safety_checklist()
     ensure_bitcoind_running()
@@ -856,7 +857,7 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32):
 
     # back to hex string
     hex_private_key = xor_hex_strings(dice_seed_hash, rng_seed_hash)
-    bin_private_key = unhexlify(hex_private_key)
+    bin_private_key = unhexlify(hex_private_key)[:data_length]
 
    # convert private key to BIP39 mnemonic phrase
     mnemo = Mnemonic("english")
@@ -1133,6 +1134,7 @@ if __name__ == "__main__":
     add_rng(parser_create_wallet)
     dice_help = "Minimum number of dice rolls to use for entropy when generating private keys (default: 100)"
     parser_create_wallet.add_argument("-d", "--dice", type=int, help=dice_help, default=100)
+    parser_create_wallet.add_argument("--num-words", type=int, help="Number of words in BIP39 mnemonic", choices=[12, 24], default=24)
     add_networks(parser_create_wallet)
 
     # View addresses parser
@@ -1164,7 +1166,8 @@ if __name__ == "__main__":
         entropy(args.rng)
 
     if args.program == "create-wallet":
-        create_wallet_interactive(args.dice, args.rng)
+        seed_length = 32 if args.num_words == 24 else 16 # in bytes
+        create_wallet_interactive(args.dice, args.rng, seed_length)
 
     if args.program == "view-addresses":
         view_addresses_interactive(args.m, args.n, args.trust_xpubs)
