@@ -387,15 +387,15 @@ def parse_descriptor_key(key):
 
 def get_mnemonic_interactive():
     """
-    Prompts the user for a valid 24 word BIP39 mnemonic phrase
+    Prompts the user for a valid (12 or 24 word) BIP39 mnemonic phrase
     return => <string> xprv derived from the mnemonic (and empty passphrase)
     """
     mnemo = Mnemonic("english")
-    raw_mnemonic = input("\nEnter the 24 word mnemonic phrase (separate the words with whitespace): ")
+    raw_mnemonic = input("\nEnter your BIP39 mnemonic phrase (separate the words with whitespace): ")
     words = raw_mnemonic.split()
     mnemonic = " ".join(words)
-    if len(words) != 24:
-        print("Error: Mnemonic phrase must be exactly 24 words long. Exiting.")
+    if len(words) not in {12, 24}:
+        print("Error: Mnemonic phrase must be either 12 or 24 words long. Exiting.")
         sys.exit(1)
     if mnemo.check(mnemonic) != True:
         print("Error: The mnemonic phrase is invalid. Exiting.")
