@@ -438,8 +438,8 @@ def wsh_descriptor(dkeys, m, change = 0):
 
     # create descriptor without checksum
     dkeys_str = ",".join([
-        "{}/{}/*".format(dkey, str(change))
-        for _, _, dkey
+        "[{}{}]{}/{}/*".format(fng, path[1:], dkey, str(change))
+        for fng, path, dkey
         in dkeys
     ])
     descriptor = "wsh(sortedmulti({},{}))".format(str(m), dkeys_str)
@@ -978,7 +978,11 @@ def sign_psbt_interactive(m, n):
     if my_xpub not in xpubs:
         print("Error: None of the provided xpubs match the provided mnemonic phrase. Exiting.")
         sys.exit(1)
-    xkeys = [xpub if xpub != my_xpub else my_xprv for xpub in xpubs]
+    dkeys = [
+        (fng, path, xpub if xpub != my_xpub else my_xprv)
+        for (fng, path, xpub)
+        in dkeys
+    ]
 
     # prompt user for base64 psbt string
     psbt_raw = input("\nEnter the psbt for the transaction you wish to sign: ")
