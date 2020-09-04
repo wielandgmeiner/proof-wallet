@@ -50,13 +50,17 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | `create-wallet.run` | Basic flow |
 | `create-wallet.input-checks.run` | Input validation |
 
+## Tests for importing BIP39 mnemonic
+| Test case                 | Coverage goal |
+| --------------------------|  ------------- |
+| `mnemonic-unsupported-length.run`        | Fail when mnemonic isn't 12 or 24 words long |
+| `mnemonic-invalid.run`        | Fail when mnemonic is invalid |
+
 ## Tests for deposits (`view-addresses`)
 | Test case                 | Coverage goal |
 | --------------------------|  ------------- |
 | `view-addresses.run`        | Basic flow; use all available commands to explore addresses |
 | `view-addresses.trust-xpubs.run`        | Basic flow for viewing addresses with only the xpubs |
-| `view-addresses.mnemonic-too-short.run`        | Fail when mnemonic isn't 24 words long |
-| `view-addresses.mnemonic-invalid.run`        | Fail when mnemonic is invalid |
 | `view-addresses.xpub-invalid-for-network.run`        | Fail when a cosigner xpub is invalid for the specified network |
 | `view-addresses.xpub-invalid.run`        | Fail when a cosigner xpub is invalid |
 | `view-addresses.duplicate-xpubs.run`        | Fail when the user enters duplicate xpubs |

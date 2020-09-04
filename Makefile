@@ -16,9 +16,9 @@ MAKEFLAGS += --jobs=4
 # Only works when running all tests.
 ifdef COVERAGE
 coverfile = $(addsuffix .cov, $(notdir $(basename $<)))
-export GLACIERSCRIPT=env COVERAGE_FILE=../../coverage/$(coverfile) coverage run ../../glacierscript.py
+export PROOFWALLET=env COVERAGE_FILE=../../coverage/$(coverfile) coverage run ../../proofwallet.py
 else
-export GLACIERSCRIPT=../../glacierscript.py
+export PROOFWALLET=../../proofwallet.py
 endif
 
 # I need a unique port number for each bitcoind launched. Start with
@@ -85,10 +85,10 @@ define test_recipe =
 endef
 
 
-%.test : %.run %.golden glacierscript.py prereqs
+%.test : %.run %.golden proofwallet.py prereqs
 	$(call test_recipe, diff -q)
 
-%.test : %.run %.golden.re glacierscript.py prereqs
+%.test : %.run %.golden.re proofwallet.py prereqs
 	$(call test_recipe, t/smart-diff)
 
 prereqs:
