@@ -53,6 +53,8 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 ## Tests for importing BIP39 mnemonic
 | Test case                 | Coverage goal |
 | --------------------------|  ------------- |
+| `mnemonic-length-24-happy.run`        | Import 24 word mnemonic successfully |
+| `mnemonic-length-12-happy.run`        | Import 12 word mnemonic successfully |
 | `mnemonic-unsupported-length.run`        | Fail when mnemonic isn't 12 or 24 words long |
 | `mnemonic-invalid.run`        | Fail when mnemonic is invalid |
 

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+$PROOFWALLET view-addresses -m 2 -n 2 --regtest << INPUT 2>&1
+y
+y
+y
+y
+y
+y
+viable finger bless corn tomorrow emotion kangaroo there youth impose innocent december swamp reduce famous enter worth search home journey volcano clerk consider noise
+QUIT
+INPUT
+
+retVal=$?
+if [ $retVal -eq 0 ]; then
+    echo "Error: expected proofwallet.py to fail"
+    exit 1
+fi
