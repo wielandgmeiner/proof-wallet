@@ -61,6 +61,7 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 ## Tests for importing descriptor keys
 | Test case                 | Coverage goal |
 | --------------------------|  ------------- |
+| `descriptor-valid.run`        | Import various valid output descriptors successfully |
 | `descriptor-invalid-fingerprint-length.run`        | Fail when fingerprint is incorrect length |
 | `descriptor-invalid-fingerprint-chars.run`        | Fail when fingerprint contains non-hex characters |
 | `descriptor-missing-fingerprint.run`        | Fail when no fingerprint is present |
