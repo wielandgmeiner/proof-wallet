@@ -56,7 +56,20 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | `mnemonic-unsupported-length.run`        | Fail when mnemonic isn't 12 or 24 words long |
 | `mnemonic-invalid.run`        | Fail when mnemonic is invalid |
 
-## Tests for deposits (`view-addresses`)
+## Tests for importing descriptor keys
+| Test case                 | Coverage goal |
+| --------------------------|  ------------- |
+| `descriptor-invalid-fingerprint-length.run`        | Fail when fingerprint is incorrect length |
+| `descriptor-invalid-fingerprint-chars.run`        | Fail when fingerprint contains non-hex characters |
+| `descriptor-missing-fingerprint.run`        | Fail when no fingerprint is present |
+| `descriptor-no-xpub.run`        | Fail when no xpub is present |
+| `descriptor-path-invalid-char.run`        | Fail when the path contains invalid characters |
+| `descriptor-path-leading-zeros.run`        | Fail when any path index contains leading zeros |
+| `descriptor-xpub-invalid.run`        | Fail when xpub is invalid |
+| `descriptor-duplicate-fingerprints.run`        | Fail when importing the same fingerprint more than once |
+| `descriptor-duplicate-xpubs.run`        | Fail when importing the same xpub more than once |
+
+## TODO: Tests for deposits (`view-addresses`)
 | Test case                 | Coverage goal |
 | --------------------------|  ------------- |
 | `view-addresses.run`        | Basic flow; use all available commands to explore addresses |
@@ -66,7 +79,7 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | `view-addresses.duplicate-xpubs.run`        | Fail when the user enters duplicate xpubs |
 | `view-addresses.no-matching-xpub.run`        | Fail when no xpub matches the mnemonic's xpub |
 
-## Tests for withdrawls (`sign-psbt`)
+## TODO: Tests for withdrawls (`sign-psbt`)
 
 | Test case                 | Coverage goal |
 | --------------------------| ------------- |

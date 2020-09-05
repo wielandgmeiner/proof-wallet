@@ -1,0 +1,17 @@
+#!/bin/bash
+
+$PROOFWALLET view-addresses -m 2 -n 2 --trust-xpubs --regtest << INPUT 2>&1
+y
+y
+y
+y
+y
+y
+[2eb4fc90/48'/1'/0'/2']tpubDFFFhev78PB1E9LUcWoeBrwJUQrhH23f2ShmW4DueA6WDkd27qgyJeWNL62FcNQHbh6wAJhGhYm2g3xQidQ6G2SpNBh8qon3HLhc5vYzyJy
+INPUT
+
+retVal=$?
+if [ $retVal -eq 0 ]; then
+    echo "Error: expected proofwallet.py to fail"
+    exit 1
+fi
