@@ -633,7 +633,6 @@ def validate_psbt(psbt_raw, dkeys, m):
     m: <int> number of multisig keys required for withdrawal
 
     returns: dict
-        success:          List<str> successful validations performed on psbt
         error:            <str> an error if one is found
         warning:          List<str> warnings about psbt
         psbt:             <dict> python dict loaded from decodepsbt RPC call
@@ -642,7 +641,6 @@ def validate_psbt(psbt_raw, dkeys, m):
         analysis:         <dict> python dict loaded from analyzepsbt RPC call
     """
     response = {
-        "success": [],
         "error": None,
         "warning": [],
         "psbt": None,
@@ -655,7 +653,6 @@ def validate_psbt(psbt_raw, dkeys, m):
         psbt = bitcoin_cli_json("decodepsbt", psbt_raw)
         # attempt to analyze psbt (should always succeed if decode succeeds)
         response["analysis"] = bitcoin_cli_json("analyzepsbt", psbt_raw)
-        response["success"].append("The provided base64 encoded input is a valid PSBT.")
 
         # validate all inputs
         for i, _input in enumerate(psbt["inputs"]):
@@ -663,7 +660,6 @@ def validate_psbt(psbt_raw, dkeys, m):
             if psbt_in_validation_err is not None:
                 response["error"] = psbt_in_validation_err
                 return response
-        response["success"].append("All input validations succeeded.")
 
         # validate all outputs
         tx = psbt["tx"]
@@ -677,11 +673,10 @@ def validate_psbt(psbt_raw, dkeys, m):
         if len(response["change_idxs"]) == 0:
             no_change_warning = "No change outputs were identified in this transaction. "
             no_change_warning += "If you intended to send bitcoin back to your wallet as change, "
-            no_change_warning += "abort this signing process. If not, you can safely ignore this warning."
+            no_change_warning += "abort this signing process. Otherwise, you can safely ignore this warning."
             response["warning"].append(no_change_warning)
 
         # Validations succeded!
-        response["success"].append("All output validations succeeded.")
         response["psbt"] = psbt
 
     # Catches exceptions in decoding or analyzing PSBT
@@ -1032,17 +1027,12 @@ def sign_psbt_interactive(m, n):
 
     while True:
         print(LINE_BREAK)
-        print("PSBT validation SUCCESSFUL:")
-        for success in psbt_validation["success"]:
-            print("* {}".format(success))
-
-        WARNINGS_HEADER = "\nPSBT validation WARNINGS:"
         if len(psbt_validation["warning"]) > 0:
-            print(WARNINGS_HEADER)
+            print("PSBT validation was successful, but note the following warnings before signing the transaction:".format(success_msg))
             for warning in psbt_validation["warning"]:
                 print("* {}".format(warning))
         else:
-            print("{} There were no warnings during the validation process.".format(WARNINGS_HEADER))
+            print("PSBT validation was successful.")
 
         print("\n+-----------------------+")
         print("|                       |")
@@ -1058,8 +1048,8 @@ def sign_psbt_interactive(m, n):
         print("{}".format(outputs_str))
 
         print("Controls:")
-        print("    'SIGN' -- sign the psbt")
-        print("    'EXIT' -- exit")
+        print("    'SIGN' -- sign the transaction")
+        print("    'QUIT' -- quit proof wallet without signing the transaction")
         cmd = input("\nEnter your desired command: ")
 
         if cmd == "SIGN":
@@ -1067,7 +1057,7 @@ def sign_psbt_interactive(m, n):
             psbt_signed = walletprocesspsbt(psbt_raw, psbt_validation["importmulti_idxs"], dkeys, m)
 
             # show text of signed PSBT
-            print("\nRaw signed psbt (base64):")
+            print("\nSigned psbt (base64):")
             print(psbt_signed["psbt"])
 
             # show PSBT md5 fingerprint
@@ -1078,7 +1068,7 @@ def sign_psbt_interactive(m, n):
             # write qr codes of signed psbt
             write_and_verify_qr_code("signed psbt", "psbt-signed.png", psbt_signed["psbt"])
             sys.exit()
-        elif cmd == "EXIT":
+        elif cmd == "QUIT":
             print("Exiting...")
             sys.exit(0)
         else:
