@@ -911,31 +911,21 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
             sys.exit(1)
         xkeys = [xpub if xpub != my_xpub else my_xprv for xpub in xpubs]
 
-    start = 0
-    N = 10 # number of addresses to display at one time
-    change = 0
+    # first address index to show, change flag, number of addresses to show
+    start, change, N = 0, 0, 10
     while True:
         print(LINE_BREAK)
         addresses = deriveaddresses(dkeys, m, start, start + N - 1, change)
         print("Derivation Path, Address")
         for i, addr in enumerate(addresses):
             idx = start + i
-            print("[{}] .../{}/{}: {}".format(str(i), str(change), idx, addr))
+            print("../{}/{}, {} (Enter {} to save as a QR code in address.png)".format(
+                str(change), idx, addr, str(i)))
         print("\nControls:")
         print("    'NEXT' -- view next {} addresses".format(N))
         print("    'PREV' -- view previous {} addresses".format(N))
         print("    'CHANGE' -- toggle to/from change addresses")
-        print("    '0' -- save the address at index [0] as a QR code in address.png")
-        print("    '1' -- save the address at index [1] as a QR code in address.png")
-        print("    '2' -- save the address at index [2] as a QR code in address.png")
-        print("    '3' -- save the address at index [3] as a QR code in address.png")
-        print("    '4' -- save the address at index [4] as a QR code in address.png")
-        print("    '5' -- save the address at index [5] as a QR code in address.png")
-        print("    '6' -- save the address at index [6] as a QR code in address.png")
-        print("    '7' -- save the address at index [7] as a QR code in address.png")
-        print("    '8' -- save the address at index [8] as a QR code in address.png")
-        print("    '9' -- save the address at index [9] as a QR code in address.png")
-        print("    'EXIT' -- exit\n")
+        print("    'QUIT' -- quit proof wallet\n")
         cmd = input("Enter your desired command: ")
 
         if cmd == "NEXT":
@@ -944,7 +934,7 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
             start -= N
         elif cmd == "CHANGE":
             change = 1 if change == 0 else 0
-        elif cmd == "EXIT":
+        elif cmd == "QUIT":
             sys.exit()
         elif cmd in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
             write_and_verify_qr_code("address", "address.png", addresses[int(cmd)])

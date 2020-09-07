@@ -72,14 +72,11 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | `descriptor-duplicate-fingerprints.run`        | Fail when importing the same fingerprint more than once |
 | `descriptor-duplicate-xpubs.run`        | Fail when importing the same xpub more than once |
 
-## TODO: Tests for deposits (`view-addresses`)
+## Tests for deposits (`view-addresses`)
 | Test case                 | Coverage goal |
 | --------------------------|  ------------- |
 | `view-addresses.run`        | Basic flow; use all available commands to explore addresses |
 | `view-addresses.trust-xpubs.run`        | Basic flow for viewing addresses with only the xpubs |
-| `view-addresses.xpub-invalid-for-network.run`        | Fail when a cosigner xpub is invalid for the specified network |
-| `view-addresses.xpub-invalid.run`        | Fail when a cosigner xpub is invalid |
-| `view-addresses.duplicate-xpubs.run`        | Fail when the user enters duplicate xpubs |
 | `view-addresses.no-matching-xpub.run`        | Fail when no xpub matches the mnemonic's xpub |
 
 ## TODO: Tests for withdrawls (`sign-psbt`)

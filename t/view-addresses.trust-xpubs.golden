@@ -1,34 +1,25 @@
 Are you running this on a computer WITHOUT a network connection of any kind? (y/n)?Have the wireless cards in this computer been physically removed? (y/n)?Are you running on battery power? (y/n)?Are you running on an operating system booted from a USB drive? (y/n)?Is your screen hidden from view of windows, cameras, and other people? (y/n)?Are smartphones and all other nearby devices turned off and in a Faraday bag? (y/n)?
-Input 2 valid xpubs
+Input 3 valid descriptor keys
 
-Enter xpub #1: 
-Enter xpub #2: ================================================================================
+Enter descriptor key #1: 
+Enter descriptor key #2: 
+Enter descriptor key #3: ================================================================================
 Derivation Path, Address
-[0] m/0/0: bcrt1qumkqe0wvulrdq5me898ad9jg7srrulafv7z7dc66n2mq4aavh4yqk2559z
-[1] m/0/1: bcrt1qz8kklfw96letuaklg9vtu8wekw3e9cpwd2shx6tvlwfr72us6e0ssyl0lj
-[2] m/0/2: bcrt1qrpdpk2l4znph4vcte99tt7wnq6phkhnw9ss4m0cu8paulj2n7jmqn3c240
-[3] m/0/3: bcrt1q8kvzd6feufreg48fcj6m7uqtad4x2k5uwv78ardjxrgm5fkdg9ns5hzlsz
-[4] m/0/4: bcrt1qdm6uwfg4292g4ppvrel0kvfc08qaq8z4p53m08tlue9qqhx40zks3cnzk2
-[5] m/0/5: bcrt1q4el5hkh544p4l9lef2unn0vwz9lmvwfwt8enw2jpk86sdz5fk76sf4p5nl
-[6] m/0/6: bcrt1q0xy0ayn4ntc9he62dv56z5v6z2zt2mw3p4s8r68g8pjnzxyrc49s7rlghf
-[7] m/0/7: bcrt1qat7w0d86yp02vtmec6xkv3anerhfna3a0gh6uqasgp9haw4wguhsfrzuqg
-[8] m/0/8: bcrt1q5x8mgfh2jl77845u26gcxmujxh0v6xlr98932kuf36mkt2w2ff0qtapxll
-[9] m/0/9: bcrt1qx3g9gkay9ml6ed84nzcr8zwhpgj7c36pvqe0jzh4llj8vcqs4tusp6rdq7
+../0/0, bcrt1qulldgcyt7yuk9c09t7935gk2meq3ssp7txr2ntyer8gfm4cfy40s7r5ku2 (Enter 0 to save as a QR code in address.png)
+../0/1, bcrt1qwghj3vqyldul0c44uy7sy0u5mp8m4qzlsemtwrtw4xmvgam2580ss8y8gx (Enter 1 to save as a QR code in address.png)
+../0/2, bcrt1q7md5ks3rkmuqgj49tqnllhpfzter3mj5kafdrtxq4n0cw25q3nwqe4pnqt (Enter 2 to save as a QR code in address.png)
+../0/3, bcrt1qjskkwkl4c0xttgew26mucgrwz78g6jqvyyvl673944v447vnk9pqw5sjqt (Enter 3 to save as a QR code in address.png)
+../0/4, bcrt1qya20t2g0xxkzpg8e8m8m64u2gds807vcj0mlpu38ds7juh8u9c9sx7drsg (Enter 4 to save as a QR code in address.png)
+../0/5, bcrt1qvewfys0rweqkgx98p0cmjgldmfhw5smde7skqjtp2fp0u2yl9xnqrlv3tr (Enter 5 to save as a QR code in address.png)
+../0/6, bcrt1qtn73scdqv7h9c8lf2au0h5537e4fzyux0qcrez5tkh98ws5fhp2slq9jte (Enter 6 to save as a QR code in address.png)
+../0/7, bcrt1q8r4dn3yk5qlyxffk8e58fcdxu5vkcey357qsvlmqpztreeq30lmscvsgnq (Enter 7 to save as a QR code in address.png)
+../0/8, bcrt1qkucptzg2nnnhfc38zk28u0s82u0gd55jjz33ncz52se7nsdt34eqqruxwy (Enter 8 to save as a QR code in address.png)
+../0/9, bcrt1qggwdv49ewdrjvt0ltc4kyhg30ssz93g2t97gm55lysnmhd3yhshszp9akm (Enter 9 to save as a QR code in address.png)
 
 Controls:
     'NEXT' -- view next 10 addresses
     'PREV' -- view previous 10 addresses
     'CHANGE' -- toggle to/from change addresses
-    '0' -- save the address at index [0] as a QR code in address.png
-    '1' -- save the address at index [1] as a QR code in address.png
-    '2' -- save the address at index [2] as a QR code in address.png
-    '3' -- save the address at index [3] as a QR code in address.png
-    '4' -- save the address at index [4] as a QR code in address.png
-    '5' -- save the address at index [5] as a QR code in address.png
-    '6' -- save the address at index [6] as a QR code in address.png
-    '7' -- save the address at index [7] as a QR code in address.png
-    '8' -- save the address at index [8] as a QR code in address.png
-    '9' -- save the address at index [9] as a QR code in address.png
-    'EXIT' -- exit
+    'QUIT' -- quit proof wallet
 
 Enter your desired command: 
