@@ -961,7 +961,7 @@ def sign_psbt_interactive(m, n):
     xpubs = list(map(lambda dkey: dkey[2], dkeys))
 
     if my_xpub not in xpubs:
-        print("Error: None of the provided xpubs match the provided mnemonic phrase. Exiting.")
+        print("Error: No xpubs match the xpub of the provided mnemonic phrase. Exiting.")
         sys.exit(1)
     dkeys = [
         (fng, path, xpub if xpub != my_xpub else my_xprv)

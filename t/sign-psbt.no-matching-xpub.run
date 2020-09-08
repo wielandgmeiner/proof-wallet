@@ -1,19 +1,19 @@
 #!/bin/bash
 
-$GLACIERSCRIPT sign-psbt -m 2 -n 2 --regtest << INPUT 2>&1
+$PROOFWALLET sign-psbt -m 2 -n 2 --regtest << INPUT 2>&1
 y
 y
 y
 y
 y
 y
-mouse scout chest give trim veteran keen arrive test advice warrior reduce silent useful oak embrace drift curve large poet embody theme focus wolf
-tpubDDHMqKTaW9a5kRiZb7Cqak3691sdhkiJpLpwaP7m6F32E6c32nitG9Kun5qEKaBnBn1YshNRai6657YoMheZQhLycMPvKzi7ZVHARDkiA7W
-tpubD6NzVbkrYhZ4XcWFWZiEr9DBG7eFbG5H6Lz4TwmMw9FwhaRT7Yj5LyPFFBp7jok8uaPKWYsQtHEK2e1N231CmVt2QfMsjCn46by1NbrFEq9
+viable finger bless corn tomorrow emotion kangaroo there youth impose innocent december swamp reduce famous enter worth search home journey volcano clerk consider noise
+[3c906b8e]tpubD6NzVbkrYhZ4WXEkt6oeKnS3dzphc3GMcUtLX2SJungsdQn7VU3Q1d3UsEhHsExS4ho7Bqxcj7SnXzNzUgztedC8EgWcGi5CHPQdtkx2QKf
+[b48ba58d]tpubD6NzVbkrYhZ4XATUSvdtr6dWxAQVih5fthjWVF59eYwqf1VmeLwJQHByHhjPhp26jGb6EVxaFqDmNgxuerVBEmwAiTYFgmMjK4ff1PV3y8V
 INPUT
 
 retVal=$?
 if [ $retVal -eq 0 ]; then
-    echo "Error: expected glacierscript.py to fail"
+    echo "Error: expected proofwallet.py to fail"
     exit 1
 fi
