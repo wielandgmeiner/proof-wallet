@@ -534,7 +534,7 @@ def validate_psbt_bip32_derivs(dkeys, psbt_in_or_out, i, what):
 def validate_psbt_in(dkeys, m, _input, i, response):
     # Ensure input spends a witness UTXO
     if not ("non_witness_utxo" in _input and "witness_utxo" in _input):
-        return "Tx input {} must include both witness and non-witness utxo.".format(i)
+        return "Tx input {} must include both PSBT_IN_WITNESS_UTXO and PSBT_IN_NON_WITNESS_UTXO fields.".format(i)
 
     # Ensure the witness utxo is the expected type: witness_v0_scripthash
     scriptpubkey_type = _input["witness_utxo"]["scriptPubKey"]["type"]

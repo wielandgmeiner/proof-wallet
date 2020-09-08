@@ -1,0 +1,21 @@
+#!/bin/bash
+
+$PROOFWALLET sign-psbt -m 2 -n 3 --regtest << INPUT 2>&1
+y
+y
+y
+y
+y
+y
+viable finger bless corn tomorrow emotion kangaroo there youth impose innocent december swamp reduce famous enter worth search home journey volcano clerk consider noise
+[3b6b014e]tpubD6NzVbkrYhZ4Wnsni4GBz5MepuDt6zidxNKZUGKQGgokfadLG2Jf33PXRGSfTCC3xjvv2YhCpFGTrShdUq8mCqZPUjpAu9bnPuAf4vt9Apw
+[41f408e8/1']tpubD8kF7X4sjY6y5zRgmYhjd4878gYVtuesSxo8zhYkNdb5KRZK7tU42yS2RTBA6Mn86VRfRXk6RqJ6FQ35tDaLxyhEGG2SSKAf1ifcYG9fNjX
+[2eb4fc90/48'/1'/0'/2']tpubDFFFhev78PB1E9LUcWoeBrwJUQrhH23f2ShmW4DueA6WDkd27qgyJeWNL62FcNQHbh6wAJhGhYm2g3xQidQ6G2SpNBh8qon3HLhc6vYzyJy
+cHNidP8BAKICAAAAAfJztf9ZinGyMjjR07xgpWrwTG2v5X3Uzn2VHQsxAPKzAAAAAAD+////A6hhAAAAAAAAGXapFP+1Cwv8/r+UhL9lKgeNiGmsQjAoiKwgTgAAAAAAABl2qRQ0Sg9IyhUOwrkDgXZgubaLE6ZwJoisc8wAAAAAAAAiACBoOBfPiI4A1QntONoIsMksSOjz3sODatBkTMtABdK/IwAAAAAAAQEroIYBAAAAAAAiACD220tCI7b4BEqlWCf/3CkS8jjuVLdS0azArN+HKoCM3AEFaVIhAiAqGtPX5kQWd74jN/yFcuX4s6qs4hS/zaxmrH0WHHtLIQKtwLHNRHj+NuZvHF8jT6uWdUgRphCXEjJSB1D90sTb7CED9xvGtXR89zrfq7SqXZG2Q1NZ9YfzaUi8je2jAgeBvilTriIGAq3Asc1EeP425m8cXyNPq5Z1SBGmEJcSMlIHUP3SxNvsHC60/JAwAACAAQAAgAAAAIACAACAAAAAAAIAAAAiBgP3G8a1dHz3Ot+rtKpdkbZDU1n1h/NpSLyN7aMCB4G+KQw7awFOAAAAAAIAAAAiBgIgKhrT1+ZEFne+Izf8hXLl+LOqrOIUv82sZqx9Fhx7SxBB9AjoAQAAgAAAAAACAAAAAAAAAQFpUiECbNWMuz8XDrLgTOPO2Jmg8tq7Dikmr/tKSbfwGTCAUMMhA1K/Jv9SgdI8b3GgggVDQCvnL4KCG/4sM8PyFRiWgYMpIQOnYiarFyCf+SKtvMX9kkijGa50NZOD88rCecnjoOHarVOuIgIDUr8m/1KB0jxvcaCCBUNAK+cvgoIb/iwzw/IVGJaBgykQQfQI6AEAAIABAAAAAgAAACICAmzVjLs/Fw6y4EzjztiZoPLauw4pJq/7Skm38BkwgFDDHC60/JAwAACAAQAAgAAAAIACAACAAQAAAAIAAAAiAgOnYiarFyCf+SKtvMX9kkijGa50NZOD88rCecnjoOHarQw7awFOAQAAAAIAAAAA
+INPUT
+
+retVal=$?
+if [ $retVal -eq 0 ]; then
+    echo "Error: expected proofwallet.py to fail"
+    exit 1
+fi
