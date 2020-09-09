@@ -502,14 +502,14 @@ def walletprocesspsbt(psbt, idxs, dkeys, m):
 def validate_psbt_bip32_derivs(dkeys, psbt_in_or_out, i, what):
     # Ensure input contains BIP32 derivations
     if "bip32_derivs" not in psbt_in_or_out:
-        return ("Tx {} {} does not contain bip32 derivation metadata.".format(what, i), None, None)
+        return ("Tx {} {} is missing bip32 metadata.".format(what, i), None, None)
     bip32_derivs = psbt_in_or_out["bip32_derivs"]
 
     # Ensure the bip32 derivations specified in the psbt input/output are consistent with out wallet's
     expected_fps = set(map(lambda dkey: dkey[0], dkeys))
     actual_fps = set(map(lambda bip32_deriv: bip32_deriv["master_fingerprint"], bip32_derivs))
     if expected_fps != actual_fps or len(dkeys) != len(bip32_derivs):
-        return ("Tx {} {} does not have the correct set of fingerprints.".format(what, i), None, None)
+        return ("Tx {} {} has the wrong set of fingerprints.".format(what, i), None, None)
 
     # Ensure each public key derives from the correct hardened path for its master fingerprint, and
     # the _same_, _allowed_ unhardened path
@@ -520,14 +520,14 @@ def validate_psbt_bip32_derivs(dkeys, psbt_in_or_out, i, what):
         # check that hardened path matches cosigner hardened derivation path
         path_arr = bip32_deriv["path"].split(expected_path)
         if len(path_arr) != 2 and path_arr[0] != "":
-            return ("Tx {} {} contains invalid bip32 derivations for cosigner {}".format(what, i, fng), None, None)
+            return ("Tx {} {} contains an invalid hardened derivation path for cosigner {}.".format(what, i, fng), None, None)
         input_paths.add(path_arr[1])
     if len(input_paths) != 1:
-        return ("Tx {} {} contains different bip32 derivation paths for multiple descriptor keys".format(what, i), None, None)
+        return ("Tx {} {} contains different unhardened derivation paths.".format(what, i), None, None)
     input_path = input_paths.pop()
     match_object = re.match(UNHARDENED_PATH_PATTERN, input_path)
     if match_object is None:
-        return ("Tx {} {} contains an unsupported unhardened bip32 derivation path: {}".format(what, i, input_path), None, None)
+        return ("Tx {} {} contains an unsupported unhardened bip32 derivation path: {}.".format(what, i, input_path), None, None)
     change, idx = map(int, match_object.groups())
     return (None, change, idx)
 
@@ -543,14 +543,14 @@ def validate_psbt_in(dkeys, m, _input, i, response):
 
     # Ensure input contains a witness script
     if "witness_script" not in _input:
-        return "Tx input {} doesn't contain a witness script".format(i)
+        return "Tx input {} must include a PSBT_IN_WITNESS_SCRIPT field.".format(i)
 
     # Ensure that the witness script hash equals the scriptPubKey
     witness_script = _input["witness_script"]["hex"]
     witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
     scriptPubKeyParts = _input["witness_utxo"]["scriptPubKey"]["asm"].split(" ")
     if witness_script_hash != scriptPubKeyParts[1]:
-        return "The hash of the witness script for Tx input {} does not match the provided witness UTXO scriptPubKey".format(i)
+        return "The SHA256 of PSBT_IN_WITNESS_SCRIPT and PSBT_IN_WITNESS_UTXO don't match for Tx input {}.".format(i)
 
     # Validate psbt input bip32 derivations
     (bip32_derivs_err, change, idx) = validate_psbt_bip32_derivs(dkeys, _input, i, "input")

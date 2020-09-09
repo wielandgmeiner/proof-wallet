@@ -7,4 +7,4 @@ Enter descriptor key #2:
 Enter descriptor key #3: 
 Enter the psbt for the transaction you wish to sign: 
 Validating the PSBT...
-Error: Tx input 0 doesn't contain a witness script
+Error: Tx input 0 must include a PSBT_IN_WITNESS_SCRIPT field.
