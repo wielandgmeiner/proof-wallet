@@ -527,7 +527,7 @@ def validate_psbt_bip32_derivs(dkeys, psbt_in_or_out, i, what):
     input_path = input_paths.pop()
     match_object = re.match(UNHARDENED_PATH_PATTERN, input_path)
     if match_object is None:
-        return ("Tx {} {} contains an unsupported unhardened bip32 derivation path: {}.".format(what, i, input_path), None, None)
+        return ("Tx {} {} contains an unsupported derivation path: '..{}'.".format(what, i, input_path), None, None)
     change, idx = map(int, match_object.groups())
     return (None, change, idx)
 
