@@ -97,8 +97,8 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | no | `sign-psbt.input-bip32-paths-dont-match.run`        | Fail when at least 1 `PSBT_IN_BIP32_DERIVATION` path (hardened) doesn't match ours |
 | no | `sign-psbt.input-different-unhardened-paths.run`        | Fail when at least 1 `PSBT_IN_BIP32_DERIVATION` path (unhardened) doesn't match ours |
 | no | `sign-psbt.input-unsupported-bip32-path.run`        | Fail when an input's bip32 path (unhardened part) is not supported |
-| yes | `sign-psbt.input-unexpected-derived-address.run`        | Fail when the input address derived from the bip32 paths doesn't match the witness_utxo's scriptPubKey |
-| yes | `sign-psbt.input-unsupported-sighash.run`        | Fail when an input specifies a sighash type that is not 'ALL' |
+| no | `sign-psbt.input-unexpected-derived-address.run`        | Fail when the input address derived from the bip32 paths doesn't match the witness_utxo's scriptPubKey |
+| no | `sign-psbt.input-unsupported-sighash.run`        | Fail when an input specifies a sighash type that is not 'ALL' |
 | yes | `sign-psbt.output-different-bip32-paths.run`        | Fail when there are multiple bip32 derivation paths for one change output |
 | yes | `sign-psbt.output-unsupported-bip32-path.run`        | Fail when a change output's bip32 path is not supported |
 | yes | `sign-psbt.output-unexpected-derived-address.run`        | Fail when a change output address derived from the bip32 paths doesn't match the Tx vout scriptPubKey |

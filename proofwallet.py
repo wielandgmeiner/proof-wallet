@@ -564,11 +564,11 @@ def validate_psbt_in(dkeys, m, _input, i, response):
     # Ensure expected address implied by metadata matches actual address supplied
     [expected_address] = deriveaddresses(dkeys, m, idx, idx, change)
     if expected_address != actual_address:
-        return "Tx input {} contains an incorrect address based on the supplied bip32 derivation metadata.".format(i)
+        return "Tx input {} contains an incorrect address based on the provided bip32 metadata.".format(i)
 
     # Ensure sighash is not set at all or set correctly
     if "sighash" in _input and _input["sighash"] != "ALL":
-        return "Tx input {} specifies an unsupported sighash type: {}".format(i, _input["sighash"])
+        return "Tx input {} contains an unsupported PSBT_IN_SIGHASH_TYPE type: {}".format(i, _input["sighash"])
 
     # validation successful (update importmulti indices)
     response["importmulti_idxs"].add(idx)
