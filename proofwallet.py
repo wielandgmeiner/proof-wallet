@@ -577,15 +577,14 @@ def validate_psbt_in(dkeys, m, _input, i, response):
 def validate_psbt_out(dkeys, m, tx, output, i, response):
     # Get the corresponding Tx ouput
     tx_out = tx["vout"][i]
-    if "bip32_derivs" not in output:
-        # consider this output as not part of this wallet not an error or
-        # warning as this could be a valid output spend
-        return None
 
-    # The output cannot be change if it doesn't spend  back to the proper
-    # output type: witness_v0_scripthash
+    # The output can't be change if it doesn't spend back to the `witness_v0_scripthash` script type
     scriptpubkey_type = tx_out["scriptPubKey"]["type"]
     if scriptpubkey_type != "witness_v0_scripthash":
+        return None
+
+    # The output can't be change if it doesn't contain bip32 metadata
+    if "bip32_derivs" not in output:
         return None
 
     # Get the actual Tx address from the scriptPubKey
@@ -600,22 +599,16 @@ def validate_psbt_out(dkeys, m, tx, output, i, response):
     # the BIP32 derivation paths
     [expected_address] = deriveaddresses(dkeys, m, idx, idx, change)
     if expected_address != actual_address:
-        return "Tx output {} spends bitcoin to an incorrect address based on the supplied bip32 derivation metadata".format(i)
+        return "Tx output {} spends bitcoin to an incorrect address based on the provided bip32 metadata.".format(i)
 
     # Ensure that the witness script hash maps to the transaction output's scriptPubKey
     if "witness_script" not in output:
-        return "Tx output {} contains no witness script".format(i)
+        return "Tx output {} must include a PSBT_OUT_WITNESS_SCRIPT field.".format(i)
     witness_script = output["witness_script"]["hex"]
     witness_script_hash = hexlify(sha256(unhexlify(witness_script)).digest()).decode()
     scriptPubKeyParts = tx_out["scriptPubKey"]["asm"].split(" ")
     if witness_script_hash != scriptPubKeyParts[1]:
-        return "The hash of the witness script for Tx output {} does not match the Tx output's scriptPubKey".format(i)
-
-    # Allow a user to spend change to an external address, but display a warning
-    if change == 0:
-        warning = "Tx output {} spends change to an external receive address. If this is the "
-        warning += "intended behavior, you can safely ignore this warning."
-        response["warning"].append(warning.format(i))
+        return "The SHA256 of PSBT_OUT_WITNESS_SCRIPT and the scriptPubKey of Tx output {} don't match.".format(i)
 
     response["change_idxs"].append(i) # change validations pass
     return None
@@ -1028,7 +1021,7 @@ def sign_psbt_interactive(m, n):
     while True:
         print(LINE_BREAK)
         if len(psbt_validation["warning"]) > 0:
-            print("PSBT validation was successful, but note the following warnings before signing the transaction:".format(success_msg))
+            print("PSBT validation was successful, but note the following warnings before signing the transaction:")
             for warning in psbt_validation["warning"]:
                 print("* {}".format(warning))
         else:

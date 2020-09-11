@@ -101,11 +101,10 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | no | `sign-psbt.input-unsupported-sighash.run`        | Fail when an input specifies a sighash type that is not 'ALL' |
 | yes | `sign-psbt.output-different-bip32-paths.run`        | Fail when there are multiple bip32 derivation paths for one change output |
 | yes | `sign-psbt.output-unsupported-bip32-path.run`        | Fail when a change output's bip32 path is not supported |
-| yes | `sign-psbt.output-unexpected-derived-address.run`        | Fail when a change output address derived from the bip32 paths doesn't match the Tx vout scriptPubKey |
-| yes | `sign-psbt.output-no-witness-script.run`        | Fail when a change output doesn't contain a witness script |
-| yes | `sign-psbt.output-witness-script-hash-no-match.run`        | Fail when the hash of a change output's witness script doesn't match the Tx output's scriptPubKey |
-| yes | `sign-psbt.external-change-output.run`        | Display a warning when a psbt spends bitcoins to an external wallet address as change |
-| yes | `sign-psbt.no-change-outputs.run`        | Display a warning when there are no identifiable change outputs in the psbt |
+| no | `sign-psbt.output-unexpected-derived-address.run`        | Fail when a change output address derived from the bip32 paths doesn't match the Tx's scriptPubKey |
+| no | `sign-psbt.output-witness-script-missing.run`        | Fail when `PSBT_OUT_WITNESS_SCRIPT` is missing |
+| no | `sign-psbt.output-witness-script-hash-no-match.run`        | Fail when the hash of a change output's witness script doesn't match the Tx output's scriptPubKey |
+| no | `sign-psbt.no-change-outputs.run`        | Display a warning when there are no identifiable change outputs in the psbt |
 
 ## Tests for other miscellaneous
 
