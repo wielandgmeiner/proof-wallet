@@ -83,7 +83,7 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 
 | Todo | Test case                 | Coverage goal |
 |-----| --------------------------| ------------- |
-| yes | `sign-psbt.run`        | Basic flow; sign a psbt with 1 change address |
+| no | `sign-psbt.run`        | Basic flow; sign a psbt with 1 change address |
 | no | `sign-psbt.no-matching-xpub.run`        | Fail when no xpub matches the mnemonic's xpub |
 | no | `sign-psbt.invalid-psbt.run`        | Fail when psbt is invalid |
 | no | `sign-psbt.input-non-witness-utxo-missing.run`        | Fail when `PSBT_IN_NON_WITNESS_UTXO` is missing  |
@@ -101,6 +101,8 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | no | `sign-psbt.input-unsupported-sighash.run`        | Fail when an input specifies a sighash type that is not 'ALL' |
 | yes | `sign-psbt.output-different-bip32-paths.run`        | Fail when there are multiple bip32 derivation paths for one change output |
 | yes | `sign-psbt.output-unsupported-bip32-path.run`        | Fail when a change output's bip32 path is not supported |
+| no | `sign-psbt.output-bip32-metadata-wrong.run`        | Fail when `PSBT_OUT_BIP32_DERIVATION` fingerprints don't match ours |
+| no | `sign-psbt.output-bip32-paths-dont-match.run`        | Fail when at least 1 `PSBT_OUT_BIP32_DERIVATION` path (hardened) doesn't match ours |
 | no | `sign-psbt.output-unexpected-derived-address.run`        | Fail when a change output address derived from the bip32 paths doesn't match the Tx's scriptPubKey |
 | no | `sign-psbt.output-witness-script-missing.run`        | Fail when `PSBT_OUT_WITNESS_SCRIPT` is missing |
 | no | `sign-psbt.output-witness-script-hash-no-match.run`        | Fail when the hash of a change output's witness script doesn't match the Tx output's scriptPubKey |

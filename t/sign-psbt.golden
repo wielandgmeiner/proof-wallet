@@ -1,45 +1,42 @@
 Are you running this on a computer WITHOUT a network connection of any kind? (y/n)?Have the wireless cards in this computer been physically removed? (y/n)?Are you running on battery power? (y/n)?Are you running on an operating system booted from a USB drive? (y/n)?Is your screen hidden from view of windows, cameras, and other people? (y/n)?Are smartphones and all other nearby devices turned off and in a Faraday bag? (y/n)?
-Enter the 24 word mnemonic phrase (separate the words with whitespace): 
-Input 2 valid xpubs
+Enter your BIP39 mnemonic phrase (separate the words with whitespace): 
+Input 3 valid descriptor keys
 
-Enter xpub #1: 
-Enter xpub #2: 
+Enter descriptor key #1: 
+Enter descriptor key #2: 
+Enter descriptor key #3: 
 Enter the psbt for the transaction you wish to sign: 
 Validating the PSBT...
 ================================================================================
-PSBT validation SUCCESSFUL:
-* The provided base64 encoded input is a valid PSBT.
-* All input validations succeeded.
-* All output validations succeeded.
-
-PSBT validation WARNINGS: There were no warnings during the validation process.
+PSBT validation was successful.
 
 +-----------------------+
 |                       |
 |  Transaction Summary  |
 |                       |
 +-----------------------+
-Transaction ID: cb416a31b08a012710b5d2eec8358a2f6ebf46eecb7914e3f539c871c73201b3
-Virtual size: 183 vbyte
-Fee (total): 0.00000276
-Fee (rate): 1.5 sat/byte
+Transaction ID: 5211398f4bf2bd2389e785ffbb96bb4c4ea5d3c9aab7f126f59f8e408586bdda
+Virtual size: 226 vbyte
+Fee (total): 0.00002661
+Fee (rate): 11.8 sat/byte
 
 Inputs (1)
-2f9b47440a...bfb65b6b44:0	bcrt1qumkqe0wvulrdq5me898ad9jg7srrulafv7z7dc66n2mq4aavh4yqk2559z	0.01000000
+b3f200310b...59ffb573f2:0	bcrt1q7md5ks3rkmuqgj49tqnllhpfzter3mj5kafdrtxq4n0cw25q3nwqe4pnqt	0.00100000
 
-Outputs (2)
-[CHANGE] bcrt1q62qv89ksuvx73cc6anla4qdpsdqjklzn4mx5y7m70rgz3kqt234ql0nnac	0.00249724
-[NOT CHANGE] mkHS9ne12qx9pS9VojpwU5xtRd4T7X7ZUt	0.00750000
+Outputs (3)
+[NOT CHANGE] n4q1V4yzcVhK2ZVev1Gid6pmR8DvUsVX7Q	0.00025000
+[NOT CHANGE] mkHS9ne12qx9pS9VojpwU5xtRd4T7X7ZUt	0.00020000
+[CHANGE] bcrt1qdqup0nug3cqd2z0d8rdq3vxf93yw3u77cwpk45ryfn95qpwjhu3scsrxkq	0.00052339
 
 Controls:
-    'SIGN' -- sign the psbt
-    'EXIT' -- exit
+    'SIGN' -- sign the transaction
+    'QUIT' -- quit proof wallet without signing the transaction
 
 Enter your desired command: 
-Raw signed psbt (base64):
-cHNidP8BAIACAAAAAURrW7a/0IjQJW4qN6xld6NLFTSoGe+WA2VzxApER5svAAAAAAD9////AnzPAwAAAAAAIgAg0oDDltDjDejjGuz/2oGhg0ErfFOuzUJ7fnjQKNgLVGqwcQsAAAAAABl2qRQ0Sg9IyhUOwrkDgXZgubaLE6ZwJoisWXcZAAABAStAQg8AAAAAACIAIObsDL3M58bQU3k5T9aWSPQGPn+pZ4Xm41qatgr3rL1IIgID9FUZFcYYgC+97g0KJPZH+9zd+5di4ZMKbICeyY3KNIBHMEQCICceETNmi9AxMOPTkc1gmgXgrwkrfo5z4ahn5h9BykHSAiB7iE4LuJXTTjVhj531Wzdd5ouG+2UKSAH7M+rCbq58IQEBBUdSIQICL2DXAmD0XKGVlMB3Eg09gDXTogG+FJ2aa+rd3gP3niED9FUZFcYYgC+97g0KJPZH+9zd+5di4ZMKbICeyY3KNIBSriIGAgIvYNcCYPRcoZWUwHcSDT2ANdOiAb4UnZpr6t3eA/eeDDTpPNoAAAAAAAAAACIGA/RVGRXGGIAvve4NCiT2R/vc3fuXYuGTCmyAnsmNyjSADAuIqTcAAAAAAAAAAAABAUdSIQJIpi3B16WvnfaxAok7Bj3y3FHgNkdyYmD8fZW9y/evGSECpjgib8VI58A25EhnGrmHPFDlZQcTMaYB/siGkCnQmtRSriICAkimLcHXpa+d9rECiTsGPfLcUeA2R3JiYPx9lb3L968ZDAuIqTcBAAAAAAAAACICAqY4Im/FSOfANuRIZxq5hzxQ5WUHEzGmAf7IhpAp0JrUDDTpPNoBAAAAAAAAAAAA
+Signed psbt (base64):
+cHNidP8BAKICAAAAAfJztf9ZinGyMjjR07xgpWrwTG2v5X3Uzn2VHQsxAPKzAAAAAAD+////A6hhAAAAAAAAGXapFP+1Cwv8/r+UhL9lKgeNiGmsQjAoiKwgTgAAAAAAABl2qRQ0Sg9IyhUOwrkDgXZgubaLE6ZwJoisc8wAAAAAAAAiACBoOBfPiI4A1QntONoIsMksSOjz3sODatBkTMtABdK/IwAAAAAAAQCUAgAAAAG6/QYDcFAmwolS/FsDRGKuNybw3t273GDrMh0WqY8CwwEAAAAXFgAUDejkAe3io585vaxIdao5LLQPGxD+////AqCGAQAAAAAAIgAg9ttLQiO2+ARKpVgn/9wpEvI47lS3UtGswKzfhyqAjNy8oVsAAAAAABYAFN1UduvU9nl7LUUecW7ZIrScUiV0mOcbAAEBK6CGAQAAAAAAIgAg9ttLQiO2+ARKpVgn/9wpEvI47lS3UtGswKzfhyqAjNwiAgP3G8a1dHz3Ot+rtKpdkbZDU1n1h/NpSLyN7aMCB4G+KUcwRAIgJPiMMZWym6ITzkCcsN3LfbaNQ1LKZmz1hWsIaAN9HMECIBRFWXcjdHxNqEhaCClAtuVN+2lvHF1RynpmTW1W41eKAQEFaVIhAiAqGtPX5kQWd74jN/yFcuX4s6qs4hS/zaxmrH0WHHtLIQKtwLHNRHj+NuZvHF8jT6uWdUgRphCXEjJSB1D90sTb7CED9xvGtXR89zrfq7SqXZG2Q1NZ9YfzaUi8je2jAgeBvilTriIGAiAqGtPX5kQWd74jN/yFcuX4s6qs4hS/zaxmrH0WHHtLEEH0COgBAACAAAAAAAIAAAAiBgKtwLHNRHj+NuZvHF8jT6uWdUgRphCXEjJSB1D90sTb7BwutPyQMAAAgAEAAIAAAACAAgAAgAAAAAACAAAAIgYD9xvGtXR89zrfq7SqXZG2Q1NZ9YfzaUi8je2jAgeBvikMO2sBTgAAAAACAAAAAAAAAQFpUiECbNWMuz8XDrLgTOPO2Jmg8tq7Dikmr/tKSbfwGTCAUMMhA1K/Jv9SgdI8b3GgggVDQCvnL4KCG/4sM8PyFRiWgYMpIQOnYiarFyCf+SKtvMX9kkijGa50NZOD88rCecnjoOHarVOuIgICbNWMuz8XDrLgTOPO2Jmg8tq7Dikmr/tKSbfwGTCAUMMcLrT8kDAAAIABAACAAAAAgAIAAIABAAAAAgAAACICA1K/Jv9SgdI8b3GgggVDQCvnL4KCG/4sM8PyFRiWgYMpEEH0COgBAACAAQAAAAIAAAAiAgOnYiarFyCf+SKtvMX9kkijGa50NZOD88rCecnjoOHarQw7awFOAQAAAAIAAAAA
 
 PSBT fingerprint (md5):
-8694bfc8fc9a5da58e4959f9900b338e
+95bf60d3ffcda1d3dab1d201aeb58d23
 
-QR code for signed psbt written to psbt-signed.png
+QR code for signed psbt written to psbt-signed-01.png,psbt-signed-02.png
