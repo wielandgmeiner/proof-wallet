@@ -1,15 +1,16 @@
 #!/bin/bash
 
-$PROOFWALLET sign-psbt -m 2 -n 2 --regtest << INPUT 2>&1
+$PROOFWALLET sign-psbt -m 2 -n 3 --regtest << INPUT 2>&1
 y
 y
 y
 y
 y
 y
-mouse scout chest give trim veteran keen arrive test advice warrior reduce silent useful oak embrace drift curve large poet embody theme focus wolf
-tpubD6NzVbkrYhZ4YTjZqdGdMpqtd7BFKkERJcK3hjQx4gtHC3xowC5EKAsHY5tgx1coSC6sbw6X7Ngc1AFrVEzgwFFAF8pbsU5n28yYiZrxTAg
-tpubD6NzVbkrYhZ4XcWFWZiEr9DBG7eFbG5H6Lz4TwmMw9FwhaRT7Yj5LyPFFBp7jok8uaPKWYsQtHEK2e1N231CmVt2QfMsjCn46by1NbrFEq9
+viable finger bless corn tomorrow emotion kangaroo there youth impose innocent december swamp reduce famous enter worth search home journey volcano clerk consider noise
+[3b6b014e]tpubD6NzVbkrYhZ4Wnsni4GBz5MepuDt6zidxNKZUGKQGgokfadLG2Jf33PXRGSfTCC3xjvv2YhCpFGTrShdUq8mCqZPUjpAu9bnPuAf4vt9Apw
+[41f408e8/1']tpubD8kF7X4sjY6y5zRgmYhjd4878gYVtuesSxo8zhYkNdb5KRZK7tU42yS2RTBA6Mn86VRfRXk6RqJ6FQ35tDaLxyhEGG2SSKAf1ifcYG9fNjX
+[2eb4fc90/48'/1'/0'/2']tpubDFFFhev78PB1E9LUcWoeBrwJUQrhH23f2ShmW4DueA6WDkd27qgyJeWNL62FcNQHbh6wAJhGhYm2g3xQidQ6G2SpNBh8qon3HLhc6vYzyJy
 AgAAAAEmgXE3Ht/yhek3re6ks3t4AAwFZsuzrWRkFxPKQhcb9gAAAABqRzBEAiBwsiRRI+a/R01gxbUMBD1MaRpdJDXwmjSnZiqdwlF5CgIgATKcqdrPKAvfMHQOwDkEIkIsgctFg5RXrrdvwS7dlbMBIQJlfRGNM1e44PTCzUbbezn22cONmnCry5st5dyNv+TOMf7///8C09/1BQAAAAAZdqkU0MWZA8W6woaHYOkP1SGkZlqnZSCIrADh9QUAAAAAF6kUNUXm4zuDLEcFDyTT7rk8nAOUi8eHsy4TAA==
 INPUT
 

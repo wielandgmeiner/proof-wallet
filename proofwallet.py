@@ -385,14 +385,9 @@ def parse_descriptor_key(key):
     is_valid_xpub(xpub)
     return fng, path, xpub
 
-def get_mnemonic_interactive():
-    """
-    Prompts the user for a valid (12 or 24 word) BIP39 mnemonic phrase
-    return => <string> xprv derived from the mnemonic (and empty passphrase)
-    """
+def parse_mnemonic_to_master_key(string):
     mnemo = Mnemonic("english")
-    raw_mnemonic = input("\nEnter your BIP39 mnemonic phrase (separate the words with whitespace): ")
-    words = raw_mnemonic.split()
+    words = string.split()
     mnemonic = " ".join(words)
     if len(words) not in {12, 24}:
         print("Error: Mnemonic phrase must be either 12 or 24 words long. Exiting.")
@@ -402,6 +397,14 @@ def get_mnemonic_interactive():
         sys.exit(1)
     seed = mnemo.to_seed(mnemonic)
     return mnemo.to_hd_master_key(seed, network in {"testnet", "regtest"})
+
+def get_mnemonic_interactive():
+    """
+    Prompts the user for a valid (12 or 24 word) BIP39 mnemonic phrase
+    return => <string> xprv derived from the mnemonic (and empty passphrase)
+    """
+    string = input("\nEnter your BIP39 mnemonic phrase (separate the words with whitespace): ")
+    return parse_mnemonic_to_master_key(string)
 
 def get_descriptor_keys_interactive(n):
     """
@@ -871,7 +874,7 @@ def create_wallet_interactive(dice_seed_length=100, rng_seed_length=32, data_len
 #
 ################################################################################################
 
-def view_addresses_interactive(m, n, trust_xpubs = False):
+def view_addresses_interactive(m, n, my_xprv = None, trust_xpubs = False):
     """
     Show the addresses for a multisignature wallet with the user-provided policy
     m: <int> number of multisig keys required for withdrawal
@@ -889,7 +892,8 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
         xkeys = list(map(lambda dkey: dkey[2], dkeys))
     else:
         # prompt user for mnemonic and all xpubs in the multisignature quorum
-        my_xprv = get_mnemonic_interactive()
+        if my_xprv is None:
+            my_xprv = get_mnemonic_interactive()
         my_xpub = get_xpub_from_xkey(my_xprv)
         dkeys = get_descriptor_keys_interactive(n)
         xpubs = list(map(lambda dkey: dkey[2], dkeys))
@@ -934,7 +938,7 @@ def view_addresses_interactive(m, n, trust_xpubs = False):
 # Main "withdraw" function
 #
 ################################################################################################
-def sign_psbt_interactive(m, n):
+def sign_psbt_interactive(m, n, my_xprv):
     """
     Import, validate and sign a psbt to withdraw funds from cold storage.
     All data required for this operation is input at the terminal
@@ -948,7 +952,8 @@ def sign_psbt_interactive(m, n):
     require_minimum_bitcoind_version(200100)
 
     # prompt user for mnemonic and all xpubs in the multisignature quorum
-    my_xprv = get_mnemonic_interactive()
+    if my_xprv is None:
+        my_xprv = get_mnemonic_interactive()
     my_xpub = get_xpub_from_xkey(my_xprv)
     dkeys = get_descriptor_keys_interactive(n)
     xpubs = list(map(lambda dkey: dkey[2], dkeys))
@@ -1077,7 +1082,7 @@ def sign_psbt_interactive(m, n):
 ################################################################################################
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(epilog="For more help, include a subcommand, e.g. `./glacierscript.py entropy --help`")
+    parser = argparse.ArgumentParser(epilog="For more help, include a subcommand, e.g. `./proofwallet.py entropy --help`")
     parser.add_argument('-v', '--verbose', action='store_true', help='increase output verbosity')
 
     subs = parser.add_subparsers(title='Subcommands', dest='program')
@@ -1087,19 +1092,34 @@ if __name__ == "__main__":
         parser.add_argument('--regtest', action='store_true', help=argparse.SUPPRESS)
 
     def add_rng(parser):
-        """Add the --rng option to the supplied parser."""
+        """Add the --rng option to the parser."""
         help_text = "Minimum number of 8-bit bytes to use for computer entropy when generating private keys (default: 32)"
         parser.add_argument("-r", "--rng", type=int, help=help_text, default=32)
 
     def add_m(parser):
-        """Add the -m option to the supplied parser."""
+        """Add the -m option to the parser."""
         help_text = "Number of signing keys required in an m-of-n multisig wallet (default m-of-n = 1-of-2)"
         parser.add_argument("-m", type=int, help=help_text, default=1)
 
     def add_n(parser):
-        """Add the -n option to the supplied parser."""
+        """Add the -n option to the parser."""
         help_text = "Number of total keys required in an m-of-n multisig wallet (default m-of-n = 1-of-2)"
         parser.add_argument("-n", type=int, help=help_text, default=2)
+
+    def add_private_file(parser):
+        """Add the --private-file option to the parser"""
+        help_text = "Filepath to a one line text file containing a BIP39 mnemonic"
+        parser.add_argument("--private-file", type=argparse.FileType('r'), help=help_text)
+
+    def get_xprv(args):
+        my_xprv = None
+        if args.private_file:
+            lines = args.private_file.readlines()
+            if len(lines) != 1:
+                print("Error: the private-file must contain 1 line with a BIP39 mnemonic.")
+                sys.exit(1)
+            my_xprv = parse_mnemonic_to_master_key(lines[0])
+        return my_xprv
 
     # Entropy parser
     parser_entropy = subs.add_parser('entropy', help="Generate computer entropy")
@@ -1119,6 +1139,7 @@ if __name__ == "__main__":
     add_m(parser_view_addresses)
     add_n(parser_view_addresses)
     add_networks(parser_view_addresses)
+    add_private_file(parser_view_addresses)
     parser_view_addresses.add_argument("--trust-xpubs", action="store_true", help="Only prompts user for xpubs")
 
     # Sign psbt parser
@@ -1126,6 +1147,7 @@ if __name__ == "__main__":
     add_m(parser_sign_psbt)
     add_n(parser_sign_psbt)
     add_networks(parser_sign_psbt)
+    add_private_file(parser_sign_psbt)
 
     args = parser.parse_args()
     verbose_mode = args.verbose
@@ -1147,7 +1169,7 @@ if __name__ == "__main__":
         create_wallet_interactive(args.dice, args.rng, seed_length)
 
     if args.program == "view-addresses":
-        view_addresses_interactive(args.m, args.n, args.trust_xpubs)
+        view_addresses_interactive(args.m, args.n, get_xprv(args), args.trust_xpubs)
 
     if args.program == "sign-psbt":
-        sign_psbt_interactive(args.m, args.n)
+        sign_psbt_interactive(args.m, args.n, get_xprv(args))

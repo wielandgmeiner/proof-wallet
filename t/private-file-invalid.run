@@ -1,9 +1,6 @@
 #!/bin/bash
 
-$PROOFWALLET create-wallet --regtest << INPUT 2>&1
-y
-y
-n
+$PROOFWALLET sign-psbt -m 2 -n 3 --private-file ../../t/private-invalid.txt --regtest << INPUT 2>&1
 INPUT
 
 retVal=$?
