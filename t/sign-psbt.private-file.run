@@ -1,6 +1,6 @@
 #!/bin/bash
 
-$PROOFWALLET sign-psbt -m 2 -n 3 --private-file ../../t/private.txt --regtest << INPUT 2>&1
+$PROOFWALLET sign-psbt -m 2 -n 3 --private-file $PROJECT_DIR/t/private.txt --regtest << INPUT 2>&1
 y
 y
 y

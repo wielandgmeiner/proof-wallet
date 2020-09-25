@@ -17,8 +17,10 @@ MAKEFLAGS += --jobs=4
 ifdef COVERAGE
 coverfile = $(addsuffix .cov, $(notdir $(basename $<)))
 export PROOFWALLET=env COVERAGE_FILE=../../coverage/$(coverfile) coverage run ../../proofwallet.py
+export PROJECT_DIR=$(notdir $(shell pwd))
 else
 export PROOFWALLET=../../proofwallet.py
+export PROJECT_DIR=$(shell pwd)
 endif
 
 # I need a unique port number for each bitcoind launched. Start with
