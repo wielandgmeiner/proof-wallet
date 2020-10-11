@@ -160,7 +160,7 @@ Enter your desired command:
 Note that Proof Wallet displays 10 wallet addresses simultaneously. By entering `NEXT`, `PREV`, and `CHANGE` into the terminal, you can explore your other addresses.
 
 # Sign PSBT
-You've received 10,000 sats to our first address from a testnet faucet so now let's send some of it back to the faucet. After you generate a PSBT with your multisig coordinator, use `zbarcam` to transfer the base64 encoded PSBT to your airgapped laptop. During the signing flow, you will again be prompted for your BIP39 mnemonic phrase and all N public output descriptors; however, this time, you will also be prompted to enter the base64 encoded psbt.
+You've received 100,000 sats to our first address from a testnet faucet so now let's send some of it back to the faucet. After you generate a PSBT with your multisig coordinator, use `zbarcam` to transfer the base64 encoded PSBT to your airgapped laptop. During the signing flow, you will again be prompted for your BIP39 mnemonic phrase and all N public output descriptors; however, this time, you will also be prompted to enter the base64 encoded psbt.
 
 ```
 ./proofwallet.py sign-psbt -m 2 -n 3 --testnet
@@ -217,4 +217,4 @@ e22492816b17cbeb2a6f70513dbfbf73
 
 QR code for signed psbt written to psbt-signed-01.png,psbt-signed-02.png
 ```
-At this point, you can use the QR codes in `psbt-signed-01.png` and `psbt-signed-02.png` to transfer the signed PSBT back to your online watch-only wallet. After combining this PSBT with at least 1 more signature, the PSBT can be finalized into a transaction that you can broadcast to the Bitcoin network.
+At this point, you can use the QR codes in `psbt-signed-01.png` and `psbt-signed-02.png` to transfer the signed PSBT back to your online watch-only wallet. After combining this PSBT with at least 1 additional signature, the PSBT can be finalized into a transaction that you can broadcast to the Bitcoin network.

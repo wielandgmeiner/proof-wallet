@@ -11,7 +11,7 @@ sudo add-apt-repository universe
 sudo apt-get update
 ```
 
-### Install Bitcoin v0.20.1 or above
+### Install Bitcoin v0.20.1 or higher
 _Download bitcoin v0.20.1 source and signatures_
 ```
 wget https://bitcoin.org/bin/bitcoin-core-0.20.1/bitcoin-0.20.1-x86_64-linux-gnu.tar.gz
