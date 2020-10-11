@@ -79,34 +79,35 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | `view-addresses.trust-xpubs.run`        | Basic flow for viewing addresses with only the xpubs |
 | `view-addresses.no-matching-xpub.run`        | Fail when no xpub matches the mnemonic's xpub |
 
-## TODO: Tests for withdrawls (`sign-psbt`)
+## Tests for withdrawls (`sign-psbt`)
 
-| Todo | Test case                 | Coverage goal |
-|-----| --------------------------| ------------- |
-| no | `sign-psbt.run`        | Basic flow; sign a psbt with 1 change address |
-| no | `sign-psbt.no-matching-xpub.run`        | Fail when no xpub matches the mnemonic's xpub |
-| no | `sign-psbt.invalid-psbt.run`        | Fail when psbt is invalid |
-| no | `sign-psbt.input-non-witness-utxo-missing.run`        | Fail when `PSBT_IN_NON_WITNESS_UTXO` is missing  |
-| no | `sign-psbt.input-witness-utxo-missing.run`        | Fail when `PSBT_IN_NON_WITNESS_UTXO` is missing  |
-| no | `sign-psbt.input-bip32-metadata-missing.run`        | Fail when `PSBT_IN_BIP32_DERIVATION` is missing |
-| no | `sign-psbt.input-bip32-metadata-wrong.run`        | Fail when `PSBT_IN_BIP32_DERIVATION` fingerprints don't match ours |
-| no | `sign-psbt.input-bip32-metadata-extra.run`        | Fail when `PSBT_IN_BIP32_DERIVATION` contains an extra fingerprint |
-| no | `sign-psbt.input-scriptPubKey-type-wrong.run`        | Fail when an input's scriptPubKey type isn't correct |
-| no | `sign-psbt.input-witness-script-missing.run`        | Fail when `PSBT_IN_WITNESS_SCRIPT` is missing |
-| no | `sign-psbt.input-witness-script-hash-no-match.run`        | Fail when the SHA256 of `PSBT_IN_WITNESS_SCRIPT` doesn't match the `PSBT_IN_WITNESS_UTXO` scriptPubKey |
-| no | `sign-psbt.input-bip32-paths-dont-match.run`        | Fail when at least 1 `PSBT_IN_BIP32_DERIVATION` path (hardened) doesn't match ours |
-| no | `sign-psbt.input-different-unhardened-paths.run`        | Fail when at least 1 `PSBT_IN_BIP32_DERIVATION` path (unhardened) doesn't match ours |
-| no | `sign-psbt.input-unsupported-bip32-path.run`        | Fail when an input's bip32 path (unhardened part) is not supported |
-| no | `sign-psbt.input-unexpected-derived-address.run`        | Fail when the input address derived from the bip32 paths doesn't match the witness_utxo's scriptPubKey |
-| no | `sign-psbt.input-unsupported-sighash.run`        | Fail when an input specifies a sighash type that is not 'ALL' |
-| yes | `sign-psbt.output-different-bip32-paths.run`        | Fail when there are multiple bip32 derivation paths for one change output |
-| yes | `sign-psbt.output-unsupported-bip32-path.run`        | Fail when a change output's bip32 path is not supported |
-| no | `sign-psbt.output-bip32-metadata-wrong.run`        | Fail when `PSBT_OUT_BIP32_DERIVATION` fingerprints don't match ours |
-| no | `sign-psbt.output-bip32-paths-dont-match.run`        | Fail when at least 1 `PSBT_OUT_BIP32_DERIVATION` path (hardened) doesn't match ours |
-| no | `sign-psbt.output-unexpected-derived-address.run`        | Fail when a change output address derived from the bip32 paths doesn't match the Tx's scriptPubKey |
-| no | `sign-psbt.output-witness-script-missing.run`        | Fail when `PSBT_OUT_WITNESS_SCRIPT` is missing |
-| no | `sign-psbt.output-witness-script-hash-no-match.run`        | Fail when the hash of a change output's witness script doesn't match the Tx output's scriptPubKey |
-| no | `sign-psbt.no-change-outputs.run`        | Display a warning when there are no identifiable change outputs in the psbt |
+| Test case                 | Coverage goal |
+| --------------------------| ------------- |
+| `sign-psbt.run`        | Basic flow; sign a psbt with 1 change address |
+| `sign-psbt.private-file.run`        | Sign a psbt but load the mnemonic from a text file |
+| `sign-psbt.no-matching-xpub.run`        | Fail when no xpub matches the mnemonic's xpub |
+| `sign-psbt.invalid-psbt.run`        | Fail when psbt is invalid |
+| `sign-psbt.input-non-witness-utxo-missing.run`        | Fail when `PSBT_IN_NON_WITNESS_UTXO` is missing  |
+| `sign-psbt.input-witness-utxo-missing.run`        | Fail when `PSBT_IN_NON_WITNESS_UTXO` is missing  |
+| `sign-psbt.input-bip32-metadata-missing.run`        | Fail when `PSBT_IN_BIP32_DERIVATION` is missing |
+| `sign-psbt.input-bip32-metadata-wrong.run`        | Fail when `PSBT_IN_BIP32_DERIVATION` fingerprints don't match ours |
+| `sign-psbt.input-bip32-metadata-extra.run`        | Fail when `PSBT_IN_BIP32_DERIVATION` contains an extra fingerprint |
+| `sign-psbt.input-scriptPubKey-type-wrong.run`        | Fail when an input's scriptPubKey type isn't correct |
+| `sign-psbt.input-witness-script-missing.run`        | Fail when `PSBT_IN_WITNESS_SCRIPT` is missing |
+| `sign-psbt.input-witness-script-hash-no-match.run`        | Fail when the SHA256 of `PSBT_IN_WITNESS_SCRIPT` doesn't match the `PSBT_IN_WITNESS_UTXO` scriptPubKey |
+| `sign-psbt.input-bip32-paths-dont-match.run`        | Fail when at least 1 `PSBT_IN_BIP32_DERIVATION` path (hardened) doesn't match ours |
+| `sign-psbt.input-different-unhardened-paths.run`        | Fail when at least 1 `PSBT_IN_BIP32_DERIVATION` path (unhardened) doesn't match ours |
+| `sign-psbt.input-unsupported-bip32-path.run`        | Fail when an input's bip32 path (unhardened part) is not supported |
+| `sign-psbt.input-unexpected-derived-address.run`        | Fail when the input address derived from the bip32 paths doesn't match the witness_utxo's scriptPubKey |
+| `sign-psbt.input-unsupported-sighash.run`        | Fail when an input specifies a sighash type that is not 'ALL' |
+| `sign-psbt.output-different-bip32-paths.run`        | Fail when there are multiple bip32 derivation paths for one change output |
+| `sign-psbt.output-unsupported-bip32-path.run`        | Fail when a change output's bip32 path is not supported |
+| `sign-psbt.output-bip32-metadata-wrong.run`        | Fail when `PSBT_OUT_BIP32_DERIVATION` fingerprints don't match ours |
+| `sign-psbt.output-bip32-paths-dont-match.run`        | Fail when at least 1 `PSBT_OUT_BIP32_DERIVATION` path (hardened) doesn't match ours |
+| `sign-psbt.output-unexpected-derived-address.run`        | Fail when a change output address derived from the bip32 paths doesn't match the Tx's scriptPubKey |
+| `sign-psbt.output-witness-script-missing.run`        | Fail when `PSBT_OUT_WITNESS_SCRIPT` is missing |
+| `sign-psbt.output-witness-script-hash-no-match.run`        | Fail when the hash of a change output's witness script doesn't match the Tx output's scriptPubKey |
+| `sign-psbt.no-change-outputs.run`        | Display a warning when there are no identifiable change outputs in the psbt |
 
 ## Tests for other miscellaneous
 
