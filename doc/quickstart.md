@@ -51,7 +51,7 @@ sudo apt-get install qrencode zbar-tools -y
 
 ### Download Proof Wallet
 ```
-git clone https://github.com/hodlwave/proof-wallet.git
+git clone --recurse-submodules https://github.com/hodlwave/proof-wallet.git
 cd proof-wallet
 ./proofwallet --help
 ```
