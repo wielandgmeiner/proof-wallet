@@ -1,11 +1,13 @@
 #! /bin/sh
 
 # Constants
+PROOF_WALLET_TAG=v0.1-alpha
 PYTHON_MNEMONIC_HASH=ad06157e21fc2c2145c726efbfdcf69df1350061
 
 # Clone Proof Wallet and initalize submodule
 git clone https://github.com/hodlwave/proof-wallet.git
 pushd proof-wallet
+git checkout $PROOF_WALLET_TAG
 git submodule update --init
 
 # Checkout specific commit hash 
