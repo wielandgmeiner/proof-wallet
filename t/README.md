@@ -115,3 +115,7 @@ $ make COVERAGE=1; firefox coverage-report/index.html
 | -------- | ------------- |
 | `entropy.run` | Entropy subcommand |
 | `safety-check-fails.run` | Failed safety checks |
+| `m-too-large.run` | Fail when m is greater than n |
+| `m-too-small.run` | Fail when m is less than 1 |
+| `n-too-large.run` | Fail when n is greater than 15 |
+| `n-too-small.run` | Fail when n is less than 2 |

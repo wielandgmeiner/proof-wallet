@@ -1121,6 +1121,14 @@ if __name__ == "__main__":
             my_xprv = parse_mnemonic_to_master_key(lines[0])
         return my_xprv
 
+    def validate_m_n(m, n):
+        if n < 2 or n > 15:
+            print("Error: n must be between 2 and 15")
+            sys.exit(1)
+        if m < 1 or m > n:
+            print("Error: m must be between 1 and n")
+            sys.exit(1)
+
     # Entropy parser
     parser_entropy = subs.add_parser('entropy', help="Generate computer entropy")
     add_rng(parser_entropy)
@@ -1169,7 +1177,9 @@ if __name__ == "__main__":
         create_wallet_interactive(args.dice, args.rng, seed_length)
 
     if args.program == "view-addresses":
+        validate_m_n(args.m, args.n)
         view_addresses_interactive(args.m, args.n, get_xprv(args), args.trust_xpubs)
 
     if args.program == "sign-psbt":
+        validate_m_n(args.m, args.n)
         sign_psbt_interactive(args.m, args.n, get_xprv(args))

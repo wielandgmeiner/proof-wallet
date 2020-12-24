@@ -1,0 +1,10 @@
+#!/bin/bash
+
+$PROOFWALLET view-addresses -m 5 -n 4 --regtest << INPUT 2>&1
+INPUT
+
+retVal=$?
+if [ $retVal -eq 0 ]; then
+    echo "Error: expected proofwallet.py to fail"
+    exit 1
+fi
