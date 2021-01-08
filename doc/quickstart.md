@@ -37,6 +37,17 @@ owner.
 Ensure primary key fingerprint is: 01EA 5486 DE18 A882 D4C2  6845 90C8 019E 36C2 E964
 ```
 
+_Check that the downloaded binary matches the SHA256SUMS file_
+```
+sha256sum -c --ignore-missing SHA256SUMS.asc
+```
+
+_You should see the following..._
+```
+bitcoin-0.20.1-x86_64-linux-gnu.tar.gz: OK
+sha256sum: WARNING: 20 lines are improperly formatted
+```
+
 _Extract the binaries and copy them to the local binary directory_
 ```
 tar xf bitcoin-0.20.1-x86_64-linux-gnu.tar.gz
