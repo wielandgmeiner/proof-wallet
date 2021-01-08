@@ -16,6 +16,7 @@ PSBT validation was successful.
 +-----------------------+
 Transaction ID: 5211398f4bf2bd2389e785ffbb96bb4c4ea5d3c9aab7f126f59f8e408586bdda
 Virtual size: 226 vbyte
+Amount sent: 0.00045000
 Fee (total): 0.00002661
 Fee (rate): 11.8 sat/byte
 
@@ -38,4 +39,4 @@ cHNidP8BAKICAAAAAfJztf9ZinGyMjjR07xgpWrwTG2v5X3Uzn2VHQsxAPKzAAAAAAD+////A6hhAAAA
 PSBT fingerprint (md5):
 95bf60d3ffcda1d3dab1d201aeb58d23
 
-QR code for signed psbt written to psbt-signed-01.png,psbt-signed-02.png
+QR code for signed psbt written to psbt-signed.png

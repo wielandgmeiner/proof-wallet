@@ -18,6 +18,7 @@ PSBT validation was successful, but note the following warnings before signing t
 +-----------------------+
 Transaction ID: 5211398f4bf2bd2389e785ffbb96bb4c4ea5d3c9aab7f126f59f8e408586bdda
 Virtual size: 226 vbyte
+Amount sent: 0.00097339
 Fee (total): 0.00002661
 Fee (rate): 11.8 sat/byte
 

@@ -98,7 +98,7 @@ def run_subprocess(exe, *args):
     """
     cmd_list = [exe] + cli_args + list(args)
     verbose("bitcoin cli call:\n  {0}\n".format(" ".join(shlex.quote(x) for x in cmd_list)))
-    with subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1) as pipe:
+    with subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as pipe:
         output, _ = pipe.communicate()
     output = output.decode('ascii')
     retcode = pipe.returncode
@@ -739,7 +739,7 @@ def write_and_verify_qr_code(name, filename, data):
     base, ext = os.path.splitext(filename)
     for deleteme in glob.glob("{}*{}".format(base, ext)):
         os.remove(deleteme)
-    MAX_QR_LEN = 1000
+    MAX_QR_LEN = 3000
     if len(data) <= MAX_QR_LEN:
         write_qr_code(filename, data)
         filenames = [filename]
@@ -1017,10 +1017,12 @@ def sign_psbt_interactive(m, n, my_xprv):
         value = Decimal(psbt["tx"]["vout"][idx]["value"]).quantize(SATOSHI_PLACES)
         return (addr, value, change)
 
+    amt_sent = 0
     outputs = list(map(lambda i: parse_output(psbt, i), range(num_vout)))
     outputs_str = "Outputs ({})\n".format(num_vout)
     for addr, value, change in outputs:
         change_str = "CHANGE" if change else "NOT CHANGE"
+        amt_sent += 0 if change else value
         outputs_str += "[{}] {}\t{}\n".format(change_str, addr, value)
 
     while True:
@@ -1039,6 +1041,7 @@ def sign_psbt_interactive(m, n, my_xprv):
         print("+-----------------------+")
         print("Transaction ID: {}".format(txid))
         print("Virtual size: {} vbyte".format(vsize))
+        print("Amount sent: {}".format(amt_sent))
         print("Fee (total): {}".format(fee))
         print("Fee (rate): {} sat/byte".format(fee_rate))
 
